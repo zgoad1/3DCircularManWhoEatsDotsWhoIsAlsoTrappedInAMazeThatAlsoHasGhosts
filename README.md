@@ -13,13 +13,13 @@ pamcan
 - Implement gameplay elements
 
 ## Bugs
-**~ A ~**
+**- A -**
 - None
 
-**~ B ~**
+**- B -**
 - None
 
-**~ C ~**
+**- C -**
 - None
 
 ## Current features
