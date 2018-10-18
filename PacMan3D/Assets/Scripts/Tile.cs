@@ -5,6 +5,7 @@ using UnityEngine;
 public class Tile : MonoBehaviour {
 	public bool passable;
 	public GameObject item;
+	public int i, j;
 	[HideInInspector] public Tile up, left, right, down;
 
 	private void Reset() {

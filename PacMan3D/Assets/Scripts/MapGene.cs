@@ -8,7 +8,7 @@ public class MapGene : MonoBehaviour {
 	[SerializeField] [TextArea(36, 36)] private string itemString;
 	[SerializeField] private TextAsset mapFile;
 	[SerializeField] private TextAsset itemFile;
-	[SerializeField] private float tileSize = 1.0f;
+	public float tileSize = 1.0f;
 	[SerializeField] private GameObject floorTile;
 	[SerializeField] private GameObject wallTile;
 	[SerializeField] private GameObject dot;
@@ -39,7 +39,7 @@ public class MapGene : MonoBehaviour {
 	}
 
 	// Use this for initialization
-	void Start () {
+	void Awake () {
 		ParseMapString();
 	}
 
@@ -66,7 +66,7 @@ public class MapGene : MonoBehaviour {
 
 			tileMap = new Tile[mapHeight, mapWidth];
 			int ti = 0, tj = 0;
-			Vector3 tilePos = new Vector3(-mapWidth * tileSize / 2.0f, 0, mapHeight * tileSize / 2.0f);    // start creating tiles from the top left
+			Vector3 tilePos = new Vector3(-mapWidth * tileSize / 2.0f + 0.5f, 0, mapHeight * tileSize / 2.0f - 0.5f);    // start creating tiles from the top left
 			for(int i = 0; i < mapString.Length; i++) {
 				if(mapString[i] != ' ' && mapString[i] != '\0') {  // ignore spaces and null chars
 					GameObject newTile = null;
@@ -76,6 +76,8 @@ public class MapGene : MonoBehaviour {
 						newTile.transform.position = tilePos;
 						newTile.name = string.Format("floor_{0},{1}", ti, tj);
 						Tile t = newTile.GetComponent<Tile>();
+						t.i = ti;
+						t.j = tj;
 						tileMap[ti, tj] = t;
 						GameObject itemPrefab = dot;
 						// get item to spawn here based on what the item file says
@@ -108,6 +110,8 @@ public class MapGene : MonoBehaviour {
 						newTile.transform.position = tilePos;
 						newTile.name = string.Format("wall_{0},{1}", ti, tj);
 						tileMap[ti, tj] = newTile.GetComponent<Tile>();
+						tileMap[ti, tj].i = ti;
+						tileMap[ti, tj].j = tj;
 					} else if(mapString[i] == '\n') {
 						// move tilePos all the way back to the left, and one tile's distance down
 						tilePos.x -= tileSize * (mapWidth + 1);
