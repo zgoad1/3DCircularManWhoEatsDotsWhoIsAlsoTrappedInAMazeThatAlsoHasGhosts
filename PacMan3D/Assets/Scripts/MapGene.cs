@@ -14,7 +14,8 @@ public class MapGene : MonoBehaviour {
 	[SerializeField] private GameObject dot;
 	[SerializeField] private GameObject bigDot;
 	[SerializeField] private GameObject fruit;
-	[SerializeField] private int mapWidth, mapHeight;
+	public int mapWidth, mapHeight;
+	[HideInInspector] public Tile[,] tileMap;
 	private bool inconsistentSizeError = false;
 
 	// Executed upon clicking 'Reset' from the context menu, and upon adding the component
@@ -29,15 +30,12 @@ public class MapGene : MonoBehaviour {
 		dot = Resources.Load<GameObject>("dot");
 		bigDot = Resources.Load<GameObject>("bigDot");
 		fruit = Resources.Load<GameObject>("fruit");
-		mapWidth = mapString.Split('\n')[0].Length / 2; // there's an extra char (either ' ' or '\n') for every tile; must divide by 2
-		int itemWidth = mapString.Split('\n')[0].Length / 2; // there's an extra char (either ' ' or '\n') for every tile; must divide by 2
+		string[] mapArray = mapString.Split('\n');
+		mapWidth = mapArray[0].Length / 2; // there's an extra char (either ' ' or '\n') for every tile; must divide by 2
+		mapHeight = mapArray.Length;
+		Debug.Log("Map width: " + mapWidth + "\nMap height: " + mapHeight);
+		int itemWidth = mapString.Split('\n')[0].Length / 2; 
 		if(itemWidth != mapWidth) inconsistentSizeError = true;
-		else {
-			mapHeight = 1;                                  // count an extra newline for the last line
-			foreach(char c in mapString) {
-				if(c == '\n') mapHeight++;                  // one tile in height for every newline in the file
-			}
-		}
 	}
 
 	// Use this for initialization
@@ -57,24 +55,28 @@ public class MapGene : MonoBehaviour {
 			// destroy all existing tiles before spawning new ones
 			Tile[] toDestroy = par.GetComponentsInChildren<Tile>();
 			foreach(Tile t in toDestroy) {
-				Debug.Log("Destroying " + t.gameObject.name);
+				//Debug.Log("Destroying " + t.gameObject.name);
 				DestroyImmediate(t.gameObject);
 			}
-			Debug.Log("======== DESTROYING FINISHED ========");
+			//Debug.Log("======== DESTROYING FINISHED ========");
 
 			/////////////////////////////////////////////////
 			#region Parse mapString and instantiate the tiles
 			/////////////////////////////////////////////////
 
+			tileMap = new Tile[mapHeight, mapWidth];
+			int ti = 0, tj = 0;
 			Vector3 tilePos = new Vector3(-mapWidth * tileSize / 2.0f, 0, mapHeight * tileSize / 2.0f);    // start creating tiles from the top left
 			for(int i = 0; i < mapString.Length; i++) {
-				if(mapString[i] != ' ') {  // ignore spaces
+				if(mapString[i] != ' ' && mapString[i] != '\0') {  // ignore spaces and null chars
 					GameObject newTile = null;
 					if(mapString[i] == '+' || mapString[i] == '-' || mapString[i] == '|') {
 						// create floor tile (different chars will later influence the walls around them)
 						newTile = Instantiate(floorTile);
 						newTile.transform.position = tilePos;
+						newTile.name = string.Format("floor_{0},{1}", ti, tj);
 						Tile t = newTile.GetComponent<Tile>();
+						tileMap[ti, tj] = t;
 						GameObject itemPrefab = dot;
 						// get item to spawn here based on what the item file says
 						// 0 - nothing
@@ -95,7 +97,7 @@ public class MapGene : MonoBehaviour {
 								itemPrefab = dot;
 								break;
 						}
-						if(itemPrefab != null) { 
+						if(itemPrefab != null) {
 							t.item = Instantiate(itemPrefab);
 							t.item.transform.SetParent(t.transform);
 							t.item.transform.localPosition = Vector3.zero;
@@ -104,14 +106,34 @@ public class MapGene : MonoBehaviour {
 						// create solid tile
 						newTile = Instantiate(wallTile);
 						newTile.transform.position = tilePos;
+						newTile.name = string.Format("wall_{0},{1}", ti, tj);
+						tileMap[ti, tj] = newTile.GetComponent<Tile>();
 					} else if(mapString[i] == '\n') {
 						// move tilePos all the way back to the left, and one tile's distance down
 						tilePos.x -= tileSize * (mapWidth + 1);
 						tilePos.z -= tileSize;
+						tj = 0;
+						ti++;
 						continue;
 					}
-					if(newTile != null) newTile.transform.SetParent(par.transform);	// set parent
+					if(newTile != null) {
+						newTile.transform.SetParent(par.transform); // set parent
+						tj++;
+					} else {
+						Debug.LogWarning("Unknown symbol found in map file: '" + mapString[i] + "'\n(if the quotes are empty it's probably ok i think)");
+					}
 					tilePos.x += tileSize;  // move tilePos one tile's distance to the right
+				}
+			}
+
+			// Set up, down, left, and right of each tile
+			for(int i = 0; i < mapHeight; i++) {
+				for(int j = 0; j < mapWidth; j++) {
+					tileMap[i, j].left = j == 0 ? tileMap[i, mapWidth - 1] : tileMap[i, j - 1];
+					tileMap[i, j].right = tileMap[i, (j + 1) % mapWidth];
+					tileMap[i, j].up = i == 0 ? tileMap[mapHeight - 1, j] : tileMap[i - 1, j];
+					tileMap[i, j].down = tileMap[(i + 1) % mapHeight, j];
+					Debug.Log(string.Format("left: {0}, right: {1}, up: {2}, down: {3}", tileMap[i, j].left.gameObject.name, tileMap[i, j].right.gameObject.name, tileMap[i, j].up.gameObject.name, tileMap[i, j].down.gameObject.name));
 				}
 			}
 
@@ -120,10 +142,5 @@ public class MapGene : MonoBehaviour {
 			/////////////////////////////////////////////////
 			
 		}
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
 	}
 }

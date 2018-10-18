@@ -12,7 +12,7 @@ public class TempPlayer : MonoBehaviour {
 	void Start () {
 		cc = GetComponent<CharacterController>();
 		rb = GetComponent<Rigidbody>();
-		cam = FindObjectOfType<MainCamera>().transform;
+		cam = FindObjectOfType<Camera>().transform;
 	}
 	
 	// Update is called once per frame
