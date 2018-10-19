@@ -31,9 +31,11 @@ public class Character : MonoBehaviour {
 			ntPos.y = nextTile.transform.position.z;
 		}
 	}
-	private int playerNum;
+	[Range(2, 4)] public int playerNum = 1;
 	private string hAxis, vAxis;
 	[SerializeField] [Range(0, 31)] private float speed = 24;
+	public bool isAiOnly = false;
+	public bool isPacman = false;
 	[SerializeField] private MapGene map;
 	private direction lasth = direction.RIGHT, lastv = direction.UP;			// last horizontal and vertical directions pressed
 	private direction lastdPress = direction.UP, lastdTravel = direction.UP;    // last direction pressed and last direction traveled
@@ -41,8 +43,6 @@ public class Character : MonoBehaviour {
 	private float percent = 0;  // how far we are from tile to nextTile
 	private Vector2 tPos = Vector2.zero, ntPos = Vector2.zero, myPos = Vector2.zero;
 	private static Vector3 left = new Vector3(-1, 0, 0), right = new Vector3(1, 0, 0), up = new Vector3(0, 0, 1), down = new Vector3(0, 0, -1);
-
-	private static int players = 1;
 
 	enum direction {
 		LEFT, RIGHT, UP, DOWN
@@ -62,16 +62,10 @@ public class Character : MonoBehaviour {
 	void Start () {
 		Reset();
 		Vector3 normCoords = GetNormalizedCoords(rb.position);
-		Debug.Log("map: " + map + "\nName: " + gameObject.name);
-		Debug.Log("normCoords: " + normCoords);
-		Debug.Log("map.tileMap: " + map.tileMap);
 		tile = map.tileMap[map.mapHeight - 1 - Mathf.FloorToInt(normCoords.z), Mathf.FloorToInt(normCoords.x)];
 		nextTile = tile.up;
-		playerNum = players;
-		players++;
 		hAxis = "P" + playerNum + "Horizontal";
 		vAxis = "P" + playerNum + "Vertical";
-		Debug.Log("haxis: " + hAxis);
 	}
 	
 	// Update is called once per frame
@@ -124,18 +118,11 @@ public class Character : MonoBehaviour {
 
 	// Moving a character uses the method Rigidbody.MovePosition
 	private void Move() {
-
-		// Use math to set 'tile' to the Tile we're nearest to
-		//Vector3 normCoords = GetNormalizedCoords(rb.position);
-		// check for out of bounds, reappropriate the coords as necessary
-		//tile = map.tileMap[map.mapHeight - 1 - Mathf.RoundToInt(normCoords.z), Mathf.RoundToInt(normCoords.x)];
-		//SetNextTile();
 		float spd = 32 - speed;
 		if(tile.i == 0 && lastdPress == direction.UP || tile.i == map.mapHeight - 1 && lastdPress == direction.DOWN) {
 			float distFromTile = Vector2.Distance(myPos, tPos);
 			// If we've passed the edge of the map, loop around to the other side
 			if(distFromTile >= map.tileSize && distFromTile < 2 * map.tileSize) {
-				Debug.Log("Negating " + rb.position.x);
 				rb.MovePosition(new Vector3(-rb.position.x, rb.position.y, rb.position.z));
 			} else {
 				// Not ready to loop around yet, keep going until we pass up this tile
@@ -148,15 +135,11 @@ public class Character : MonoBehaviour {
 		} else if(tile.j == 0 && lastdPress == direction.LEFT || tile.j == map.mapWidth - 1 && lastdPress == direction.RIGHT) {
 			float distFromTile = Vector2.Distance(myPos, tPos);
 			if(distFromTile >= map.tileSize && distFromTile < 2 * map.tileSize) {
-				Debug.Log("Negating " + rb.position.z);
 				rb.MovePosition(new Vector3(-rb.position.x, rb.position.y, rb.position.z));
 			} else {
 				if(lastdPress == direction.LEFT) {
-					Debug.Log("/about to loop LEFT");
 					rb.MovePosition(rb.position + left * map.tileSize / spd);
 				} else {
-					Debug.Log("Abougt] to loop RIGHT");
-					Debug.Log("Trying to move this far: " + right * map.tileSize / spd);
 					rb.MovePosition(rb.position + right * map.tileSize / spd);
 				}
 			}
@@ -169,11 +152,7 @@ public class Character : MonoBehaviour {
 			Vector3 movVec = (nextTile.transform.position - tile.transform.position) / spd;
 			rb.MovePosition(rb.position + movVec);
 		}
-
-		//Debug.Log("Attempting to move to: " + nextTile.gameObject.name);
-		//Debug.Log("Position: " + myPos);
-		//Debug.Log("Distance to nextTile: " + Vector2.Distance(myPos, ntPos) + "\nmyPos: " + myPos + ", ntPos: " + ntPos);	// ghost origin is messed up
-		if(Vector2.Distance(myPos, ntPos) <= map.tileSize / spd) {
+		if(Vector2.Distance(myPos, ntPos) <= map.tileSize / spd) {	// Reached a new tile
 			//Debug.Log("Initial tile: " + tile.gameObject.name);
 			tile = nextTile;
 			//Debug.Log("Moving to: " + tile.gameObject.name);
@@ -186,18 +165,20 @@ public class Character : MonoBehaviour {
 	/**Get which direction we should go based on input and past input.
 	 */
 	private direction SetNextTile() {
-		if(lastdPress == direction.LEFT && tile.left.passable) {
-			nextTile = tile.left;
-			return direction.LEFT;
-		} else if(lastdPress == direction.RIGHT && tile.right.passable) {
-			nextTile = tile.right;
-			return direction.RIGHT;
-		} else if(lastdPress == direction.UP && tile.up.passable) {
-			nextTile = tile.up;
-			return direction.UP;
-		} else if(lastdPress == direction.DOWN && tile.down.passable) {
-			nextTile = tile.down;
-			return direction.DOWN;
+		if(!isAiOnly) {
+			if(lastdPress == direction.LEFT && tile.left.passable) {
+				nextTile = tile.left;
+				return direction.LEFT;
+			} else if(lastdPress == direction.RIGHT && tile.right.passable) {
+				nextTile = tile.right;
+				return direction.RIGHT;
+			} else if(lastdPress == direction.UP && tile.up.passable) {
+				nextTile = tile.up;
+				return direction.UP;
+			} else if(lastdPress == direction.DOWN && tile.down.passable) {
+				nextTile = tile.down;
+				return direction.DOWN;
+			}
 		}
 		// Last input would hit a wall
 		lastdPress = GetDefaultDirection(lastdPress);
