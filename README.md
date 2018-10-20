@@ -12,12 +12,13 @@ pamcan
 
 ## Bugs
 **- A -**
-- Clicking into the game window after clicking out will cause all the ghosts to lose track of their current tile and ride off into the sunset
+- Clicking into the game window after clicking out will cause all the ghosts to lose track of their current tile and ride off into the sunset (but only sometimes???)
 
 **- B -**
-- None
+- Changing one ghost's direction will occasionally mess with another's
 
 **- C -**
+- Messing around with looping around the map can cause your ghost to briefly spaz out
 - Trying to run into a corner may cause a character to go back and forth between tiles
 
 ## Current features

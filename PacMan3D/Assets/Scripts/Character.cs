@@ -7,7 +7,6 @@ using UnityEngine;
 public class Character : MonoBehaviour {
 
 	private Rigidbody rb;
-	private Vector3 movVec = Vector3.zero;
 	private Tile t;
 	private Tile tile {
 
@@ -31,16 +30,13 @@ public class Character : MonoBehaviour {
 			ntPos.y = nextTile.transform.position.z;
 		}
 	}
-	[Range(2, 4)] public int playerNum = 1;
+	[Range(1, 4)] public int playerNum = 1;
 	private string hAxis, vAxis;
 	[SerializeField] [Range(0, 31)] private float speed = 24;
 	public bool isAiOnly = false;
-	public bool isPacman = false;
 	[SerializeField] private MapGene map;
-	private direction lasth = direction.RIGHT, lastv = direction.UP;			// last horizontal and vertical directions pressed
-	private direction lastdPress = direction.UP, lastdTravel = direction.UP;    // last direction pressed and last direction traveled
-	private direction lastDecided = direction.UP;
-	private float percent = 0;  // how far we are from tile to nextTile
+	private direction lasth = direction.RIGHT, lastv = direction.UP;            // last horizontal and vertical directions pressed
+	private direction lastdPress = direction.UP;
 	private Vector2 tPos = Vector2.zero, ntPos = Vector2.zero, myPos = Vector2.zero;
 	private static Vector3 left = new Vector3(-1, 0, 0), right = new Vector3(1, 0, 0), up = new Vector3(0, 0, 1), down = new Vector3(0, 0, -1);
 
@@ -119,13 +115,19 @@ public class Character : MonoBehaviour {
 	// Moving a character uses the method Rigidbody.MovePosition
 	private void Move() {
 		float spd = 32 - speed;
+
+		////////////////////////////////
+		#region Loop around screen check
+		////////////////////////////////
+		float distFromTile = Vector2.Distance(myPos, tPos);
 		if(tile.i == 0 && lastdPress == direction.UP || tile.i == map.mapHeight - 1 && lastdPress == direction.DOWN) {
-			float distFromTile = Vector2.Distance(myPos, tPos);
 			// If we've passed the edge of the map, loop around to the other side
 			if(distFromTile >= map.tileSize && distFromTile < 2 * map.tileSize) {
-				rb.MovePosition(new Vector3(-rb.position.x, rb.position.y, rb.position.z));
+				rb.MovePosition(nextTile.transform.position - (lastdPress == direction.UP ? up : down) * map.tileSize);
+				//new Vector3(rb.position.x, rb.position.y, -rb.position.z);	// this way caused bugs
 			} else {
 				// Not ready to loop around yet, keep going until we pass up this tile
+				// (can't use nextTile in computations here since this is an edge case where nextTile is all the way across the map)
 				if(lastdPress == direction.UP) {
 					rb.MovePosition(rb.position + up * map.tileSize / spd);
 				} else {
@@ -133,9 +135,8 @@ public class Character : MonoBehaviour {
 				}
 			}
 		} else if(tile.j == 0 && lastdPress == direction.LEFT || tile.j == map.mapWidth - 1 && lastdPress == direction.RIGHT) {
-			float distFromTile = Vector2.Distance(myPos, tPos);
 			if(distFromTile >= map.tileSize && distFromTile < 2 * map.tileSize) {
-				rb.MovePosition(new Vector3(-rb.position.x, rb.position.y, rb.position.z));
+				rb.MovePosition(nextTile.transform.position - (lastdPress == direction.LEFT ? left : right) * map.tileSize);
 			} else {
 				if(lastdPress == direction.LEFT) {
 					rb.MovePosition(rb.position + left * map.tileSize / spd);
@@ -143,10 +144,22 @@ public class Character : MonoBehaviour {
 					rb.MovePosition(rb.position + right * map.tileSize / spd);
 				}
 			}
+		////////////////////////////////
+			#endregion
+		////////////////////////////////
+			
 		} else {
+			// This fixes a bug with looping around the map
 			if(tile.i == 0 && lastdPress == direction.DOWN || tile.i == map.mapHeight - 1 && lastdPress == direction.UP ||
 					tile.j == 0 && lastdPress == direction.RIGHT || tile.j == map.mapWidth - 1 && lastdPress == direction.LEFT) {
-				SetNextTile();	// Ask Zac for an explanation if you're really curious what this check is for. If you're lucky, he'll remember.
+				if(distFromTile >= map.tileSize) {	// if we just looped around and then pressed the opposite direction
+					Tile temp = nextTile;
+					nextTile = tile;
+					tile = temp;
+					Debug.LogWarning("Attempting to fix bug #2");
+				} else {							// if we pressed the opposite direction right before looping around
+					SetNextTile();					// Ask Zac for an explanation if you're really curious exactly what this check is for. If you're lucky, he'll remember.
+				}
 			}
 			// Move in the direction from this tile to nextTile
 			Vector3 movVec = (nextTile.transform.position - tile.transform.position) / spd;
@@ -157,8 +170,7 @@ public class Character : MonoBehaviour {
 			tile = nextTile;
 			//Debug.Log("Moving to: " + tile.gameObject.name);
 			rb.MovePosition(nextTile.transform.position);
-			direction newDirec = SetNextTile();
-			lastdTravel = newDirec;
+			SetNextTile();
 		}
 	}
 
