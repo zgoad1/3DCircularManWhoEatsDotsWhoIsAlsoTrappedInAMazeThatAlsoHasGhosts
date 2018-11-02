@@ -137,7 +137,7 @@ public class MapGene : MonoBehaviour {
 					tileMap[i, j].right = tileMap[i, (j + 1) % mapWidth];
 					tileMap[i, j].up = i == 0 ? tileMap[mapHeight - 1, j] : tileMap[i - 1, j];
 					tileMap[i, j].down = tileMap[(i + 1) % mapHeight, j];
-					Debug.Log(string.Format("left: {0}, right: {1}, up: {2}, down: {3}", tileMap[i, j].left.gameObject.name, tileMap[i, j].right.gameObject.name, tileMap[i, j].up.gameObject.name, tileMap[i, j].down.gameObject.name));
+				//	Debug.Log(string.Format("left: {0}, right: {1}, up: {2}, down: {3}", tileMap[i, j].left.gameObject.name, tileMap[i, j].right.gameObject.name, tileMap[i, j].up.gameObject.name, tileMap[i, j].down.gameObject.name));
 				}
 			}
 

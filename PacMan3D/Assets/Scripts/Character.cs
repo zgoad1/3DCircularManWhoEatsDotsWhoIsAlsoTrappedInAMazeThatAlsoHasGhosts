@@ -6,9 +6,9 @@ using UnityEngine;
 [RequireComponent(typeof(SphereCollider))]
 public class Character : MonoBehaviour {
 
-	private Rigidbody rb;
-	private Tile t;
-	private Tile tile {
+	protected Rigidbody rb;
+	protected Tile t;
+	protected Tile tile {
 
 		get {
 			return t;
@@ -19,8 +19,8 @@ public class Character : MonoBehaviour {
 			tPos.y = tile.transform.position.z;
 		}
 	}
-	private Tile nt;
-	private Tile nextTile {
+	protected Tile nt;
+	protected Tile nextTile {
 		get {
 			return nt;
 		}
@@ -31,20 +31,20 @@ public class Character : MonoBehaviour {
 		}
 	}
 	[Range(1, 4)] public int playerNum = 1;
-	private string hAxis, vAxis;
-	[SerializeField] [Range(0, 31)] private float speed = 24;
+	protected string hAxis, vAxis;
+	[SerializeField] [Range(0, 31)] protected float speed = 24;
 	public bool isAiOnly = false;
-	[SerializeField] private MapGene map;
-	private direction lasth = direction.RIGHT, lastv = direction.UP;            // last horizontal and vertical directions pressed
-	private direction lastdPress = direction.UP;
-	private Vector2 tPos = Vector2.zero, ntPos = Vector2.zero, myPos = Vector2.zero;
-	private static Vector3 left = new Vector3(-1, 0, 0), right = new Vector3(1, 0, 0), up = new Vector3(0, 0, 1), down = new Vector3(0, 0, -1);
+	[SerializeField] protected MapGene map;
+	protected  direction lasth = direction.RIGHT, lastv = direction.UP;            // last horizontal and vertical directions pressed
+	protected direction lastdPress = direction.UP;
+	protected Vector2 tPos = Vector2.zero, ntPos = Vector2.zero, myPos = Vector2.zero;
+	protected static Vector3 left = new Vector3(-1, 0, 0), right = new Vector3(1, 0, 0), up = new Vector3(0, 0, 1), down = new Vector3(0, 0, -1);
 
-	enum direction {
+    protected enum direction {
 		LEFT, RIGHT, UP, DOWN
 	};
 
-	private void Reset() {
+    protected void Reset() {
 		map = FindObjectOfType<MapGene>();
 		rb = GetComponent<Rigidbody>();
 		rb.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
@@ -54,8 +54,8 @@ public class Character : MonoBehaviour {
 		GetComponent<SphereCollider>().radius = 0.4f;
 	}
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    protected virtual void Start () {
 		Reset();
 		Vector3 normCoords = GetNormalizedCoords(rb.position);
 		tile = map.tileMap[map.mapHeight - 1 - Mathf.FloorToInt(normCoords.z), Mathf.FloorToInt(normCoords.x)];
@@ -63,9 +63,9 @@ public class Character : MonoBehaviour {
 		hAxis = "P" + playerNum + "Horizontal";
 		vAxis = "P" + playerNum + "Vertical";
 	}
-	
-	// Update is called once per frame
-	void Update () {
+
+    // Update is called once per frame
+    protected void Update () {
 		myPos.x = rb.position.x;
 		myPos.y = rb.position.z;
 		// Stuff is reversed because I accidentally drew the map in the reverse order. Oops.
@@ -89,11 +89,11 @@ public class Character : MonoBehaviour {
 		}
 	}
 
-	private void FixedUpdate() {
+    protected void FixedUpdate() {
 		Move();
 	}
 
-	private void OnDrawGizmos() {
+    protected void OnDrawGizmos() {
 		if(tile != null) {
 			Gizmos.color = Color.blue;
 			Gizmos.DrawSphere(tile.transform.position, 1);
@@ -107,13 +107,13 @@ public class Character : MonoBehaviour {
 		}
 	}
 
-	private Vector3 GetNormalizedCoords(Vector3 pos) {
+    protected Vector3 GetNormalizedCoords(Vector3 pos) {
 		Vector3 normCoords = new Vector3(pos.x + map.mapWidth * map.tileSize / 2.0f, pos.y, pos.z + map.mapHeight * map.tileSize / 2.0f);
 		return normCoords;
 	}
 
-	// Moving a character uses the method Rigidbody.MovePosition
-	private void Move() {
+    // Moving a character uses the method Rigidbody.MovePosition
+    protected void Move() {
 		float spd = 32 - speed;
 
 		////////////////////////////////
@@ -174,9 +174,9 @@ public class Character : MonoBehaviour {
 		}
 	}
 
-	/**Get which direction we should go based on input and past input.
+    /**Get which direction we should go based on input and past input.
 	 */
-	private direction SetNextTile() {
+    protected direction SetNextTile() {
 		if(!isAiOnly) {
 			if(lastdPress == direction.LEFT && tile.left.passable) {
 				nextTile = tile.left;
@@ -197,10 +197,10 @@ public class Character : MonoBehaviour {
 		return lastdPress;
 	}
 
-	/**Returns the direction the player should go assuming the direction
+    /**Returns the direction the player should go assuming the direction
 	 * they want to go (d) is blocked.
 	 */
-	private direction GetDefaultDirection(direction d) {
+    protected virtual direction GetDefaultDirection(direction d) {
 		if(d == direction.LEFT) {
 			if(lastv == direction.UP && tile.up.passable) {
 				nextTile = tile.up;
