@@ -15,8 +15,10 @@ public class MapGene : MonoBehaviour {
 	[SerializeField] private GameObject bigDot;
 	[SerializeField] private GameObject fruit;
 	public int mapWidth, mapHeight;
-	[HideInInspector] public Tile[,] tileMap;
 	private bool inconsistentSizeError = false;
+
+	[HideInInspector] public static Tile[,] tileMap;
+	[HideInInspector] public static int numItems = 0;
 
 	// Executed upon clicking 'Reset' from the context menu, and upon adding the component
 	private void Reset() {
@@ -91,12 +93,15 @@ public class MapGene : MonoBehaviour {
 								break;
 							case '1':
 								itemPrefab = bigDot;
+								numItems++;
 								break;
 							case '2':
 								itemPrefab = fruit;
+								numItems++;
 								break;
 							default:
 								itemPrefab = dot;
+								numItems++;
 								break;
 						}
 						if(itemPrefab != null) {
