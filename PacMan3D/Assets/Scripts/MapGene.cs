@@ -14,7 +14,8 @@ public class MapGene : MonoBehaviour {
 	[SerializeField] private GameObject dot;
 	[SerializeField] private GameObject bigDot;
 	[SerializeField] private GameObject fruit;
-	public int mapWidth, mapHeight;
+	public int mapW, mapH;
+	public static int mapWidth, mapHeight;
 	[HideInInspector] public Tile[,] tileMap;
 	private bool inconsistentSizeError = false;
 
@@ -31,15 +32,19 @@ public class MapGene : MonoBehaviour {
 		bigDot = Resources.Load<GameObject>("bigDot");
 		fruit = Resources.Load<GameObject>("fruit");
 		string[] mapArray = mapString.Split('\n');
-		mapWidth = mapArray[0].Length / 2; // there's an extra char (either ' ' or '\n') for every tile; must divide by 2
-		mapHeight = mapArray.Length;
-		Debug.Log("Map width: " + mapWidth + "\nMap height: " + mapHeight);
+		mapW = mapArray[0].Length / 2; // there's an extra char (either ' ' or '\n') for every tile; must divide by 2
+		mapH = mapArray.Length;
+		mapWidth = mapW;
+		mapHeight = mapH;
+		Debug.Log("Map width: " + mapW + "\nMap height: " + mapH);
 		int itemWidth = mapString.Split('\n')[0].Length / 2; 
-		if(itemWidth != mapWidth) inconsistentSizeError = true;
+		if(itemWidth != mapW) inconsistentSizeError = true;
 	}
 
 	// Use this for initialization
 	void Awake () {
+		mapWidth = mapW;
+		mapHeight = mapH;
 		ParseMapString();
 	}
 
@@ -64,9 +69,9 @@ public class MapGene : MonoBehaviour {
 			#region Parse mapString and instantiate the tiles
 			/////////////////////////////////////////////////
 
-			tileMap = new Tile[mapHeight, mapWidth];
+			tileMap = new Tile[mapH, mapW];
 			int ti = 0, tj = 0;
-			Vector3 tilePos = new Vector3(-mapWidth * tileSize / 2.0f + 0.5f, 0, mapHeight * tileSize / 2.0f - 0.5f);    // start creating tiles from the top left
+			Vector3 tilePos = new Vector3(-mapW * tileSize / 2.0f + 0.5f, 0, mapH * tileSize / 2.0f - 0.5f);    // start creating tiles from the top left
 			for(int i = 0; i < mapString.Length; i++) {
 				if(mapString[i] != ' ' && mapString[i] != '\0') {  // ignore spaces and null chars
 					GameObject newTile = null;
@@ -114,7 +119,7 @@ public class MapGene : MonoBehaviour {
 						tileMap[ti, tj].j = tj;
 					} else if(mapString[i] == '\n') {
 						// move tilePos all the way back to the left, and one tile's distance down
-						tilePos.x -= tileSize * (mapWidth + 1);
+						tilePos.x -= tileSize * (mapW + 1);
 						tilePos.z -= tileSize;
 						tj = 0;
 						ti++;
@@ -131,13 +136,13 @@ public class MapGene : MonoBehaviour {
 			}
 
 			// Set up, down, left, and right of each tile
-			for(int i = 0; i < mapHeight; i++) {
-				for(int j = 0; j < mapWidth; j++) {
-					tileMap[i, j].left = j == 0 ? tileMap[i, mapWidth - 1] : tileMap[i, j - 1];
-					tileMap[i, j].right = tileMap[i, (j + 1) % mapWidth];
-					tileMap[i, j].up = i == 0 ? tileMap[mapHeight - 1, j] : tileMap[i - 1, j];
-					tileMap[i, j].down = tileMap[(i + 1) % mapHeight, j];
-					Debug.Log(string.Format("left: {0}, right: {1}, up: {2}, down: {3}", tileMap[i, j].left.gameObject.name, tileMap[i, j].right.gameObject.name, tileMap[i, j].up.gameObject.name, tileMap[i, j].down.gameObject.name));
+			for(int i = 0; i < mapH; i++) {
+				for(int j = 0; j < mapW; j++) {
+					tileMap[i, j].left = j == 0 ? tileMap[i, mapW - 1] : tileMap[i, j - 1];
+					tileMap[i, j].right = tileMap[i, (j + 1) % mapW];
+					tileMap[i, j].up = i == 0 ? tileMap[mapH - 1, j] : tileMap[i - 1, j];
+					tileMap[i, j].down = tileMap[(i + 1) % mapH, j];
+					//Debug.Log(string.Format("left: {0}, right: {1}, up: {2}, down: {3}", tileMap[i, j].left.gameObject.name, tileMap[i, j].right.gameObject.name, tileMap[i, j].up.gameObject.name, tileMap[i, j].down.gameObject.name));
 				}
 			}
 

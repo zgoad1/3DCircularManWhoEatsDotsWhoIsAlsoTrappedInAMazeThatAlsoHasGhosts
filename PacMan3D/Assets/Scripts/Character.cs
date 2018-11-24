@@ -6,9 +6,9 @@ using UnityEngine;
 [RequireComponent(typeof(SphereCollider))]
 public class Character : MonoBehaviour {
 
-	private Rigidbody rb;
-	private Tile t;
-	private Tile tile {
+	protected Rigidbody rb;
+	protected Tile t;
+	protected Tile tile {
 
 		get {
 			return t;
@@ -19,8 +19,8 @@ public class Character : MonoBehaviour {
 			tPos.y = tile.transform.position.z;
 		}
 	}
-	private Tile nt;
-	private Tile nextTile {
+	protected Tile nt;
+	protected Tile nextTile {
 		get {
 			return nt;
 		}
@@ -31,20 +31,20 @@ public class Character : MonoBehaviour {
 		}
 	}
 	[Range(1, 4)] public int playerNum = 1;
-	private string hAxis, vAxis;
-	[SerializeField] [Range(0, 31)] private float speed = 24;
+	protected string hAxis, vAxis;
+	[SerializeField] [Range(0, 31)] protected float speed = 24;
 	public bool isAiOnly = false;
-	[SerializeField] private MapGene map;
-	private direction lasth = direction.RIGHT, lastv = direction.UP;            // last horizontal and vertical directions pressed
-	private direction lastdPress = direction.UP;
-	private Vector2 tPos = Vector2.zero, ntPos = Vector2.zero, myPos = Vector2.zero;
-	private static Vector3 left = new Vector3(-1, 0, 0), right = new Vector3(1, 0, 0), up = new Vector3(0, 0, 1), down = new Vector3(0, 0, -1);
+	[SerializeField] protected MapGene map;
+	protected direction lasth = direction.RIGHT, lastv = direction.UP;            // last horizontal and vertical directions pressed
+	protected direction lastdPress = direction.UP;
+	protected Vector2 tPos = Vector2.zero, ntPos = Vector2.zero, myPos = Vector2.zero;
+	protected static Vector3 left = new Vector3(-1, 0, 0), right = new Vector3(1, 0, 0), up = new Vector3(0, 0, 1), down = new Vector3(0, 0, -1);
 
-	enum direction {
+	public enum direction {
 		LEFT, RIGHT, UP, DOWN
 	};
 
-	private void Reset() {
+	protected void Reset() {
 		map = FindObjectOfType<MapGene>();
 		rb = GetComponent<Rigidbody>();
 		rb.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
@@ -55,10 +55,10 @@ public class Character : MonoBehaviour {
 	}
 
 	// Use this for initialization
-	void Start () {
+	protected virtual void Start () {
 		Reset();
 		Vector3 normCoords = GetNormalizedCoords(rb.position);
-		tile = map.tileMap[map.mapHeight - 1 - Mathf.FloorToInt(normCoords.z), Mathf.FloorToInt(normCoords.x)];
+		tile = map.tileMap[MapGene.mapHeight - 1 - Mathf.FloorToInt(normCoords.z), Mathf.FloorToInt(normCoords.x)];
 		nextTile = tile.up;
 		hAxis = "P" + playerNum + "Horizontal";
 		vAxis = "P" + playerNum + "Vertical";
@@ -69,31 +69,34 @@ public class Character : MonoBehaviour {
 		myPos.x = rb.position.x;
 		myPos.y = rb.position.z;
 		// Stuff is reversed because I accidentally drew the map in the reverse order. Oops.
-		if(Input.GetAxisRaw(hAxis) > 0) {
-			lasth = direction.LEFT;
-			lastdPress = lasth;
-			//Debug.Log("RIGHT pressed");
-		} else if(Input.GetAxisRaw(hAxis) < 0) {
-			lasth = direction.RIGHT;
-			lastdPress = lasth;
-			//Debug.Log("LEFT pressed");
-		}
-		if(Input.GetAxisRaw(vAxis) < 0) {
-			lastv = direction.UP;
-			lastdPress = lastv;
-			//Debug.Log("DOWN pressed");
-		} else if(Input.GetAxisRaw(vAxis) > 0) {
-			lastv = direction.DOWN;
-			lastdPress = lastv;
-			//Debug.Log("UP pressed");
+		if(!isAiOnly) {
+			if(Input.GetAxisRaw(hAxis) > 0) {
+				lasth = direction.LEFT;
+				lastdPress = lasth;
+				//Debug.Log("RIGHT pressed");
+			} else if(Input.GetAxisRaw(hAxis) < 0) {
+				lasth = direction.RIGHT;
+				lastdPress = lasth;
+				//Debug.Log("LEFT pressed");
+			}
+			if(Input.GetAxisRaw(vAxis) < 0) {
+				lastv = direction.UP;
+				lastdPress = lastv;
+				//Debug.Log("DOWN pressed");
+			} else if(Input.GetAxisRaw(vAxis) > 0) {
+				lastv = direction.DOWN;
+				lastdPress = lastv;
+				//Debug.Log("UP pressed");
+			}
 		}
 	}
 
-	private void FixedUpdate() {
+	protected void FixedUpdate() {
 		Move();
 	}
 
-	private void OnDrawGizmos() {
+	/*
+	protected void OnDrawGizmos() {
 		if(tile != null) {
 			Gizmos.color = Color.blue;
 			Gizmos.DrawSphere(tile.transform.position, 1);
@@ -106,21 +109,22 @@ public class Character : MonoBehaviour {
 			Gizmos.DrawLine(rb.position, lasth == direction.LEFT ? rb.position + left * 2 : rb.position + right * 2);
 		}
 	}
+	*/
 
-	private Vector3 GetNormalizedCoords(Vector3 pos) {
-		Vector3 normCoords = new Vector3(pos.x + map.mapWidth * map.tileSize / 2.0f, pos.y, pos.z + map.mapHeight * map.tileSize / 2.0f);
+	protected Vector3 GetNormalizedCoords(Vector3 pos) {
+		Vector3 normCoords = new Vector3(pos.x + MapGene.mapWidth * map.tileSize / 2.0f, pos.y, pos.z + MapGene.mapHeight * map.tileSize / 2.0f);
 		return normCoords;
 	}
 
 	// Moving a character uses the method Rigidbody.MovePosition
-	private void Move() {
+	protected void Move() {
 		float spd = 32 - speed;
 
 		////////////////////////////////
 		#region Loop around screen check
 		////////////////////////////////
 		float distFromTile = Vector2.Distance(myPos, tPos);
-		if(tile.i == 0 && lastdPress == direction.UP || tile.i == map.mapHeight - 1 && lastdPress == direction.DOWN) {
+		if(tile.i == 0 && lastdPress == direction.UP || tile.i == MapGene.mapHeight - 1 && lastdPress == direction.DOWN) {
 			// If we've passed the edge of the map, loop around to the other side
 			if(distFromTile >= map.tileSize && distFromTile < 2 * map.tileSize) {
 				rb.MovePosition(nextTile.transform.position - (lastdPress == direction.UP ? up : down) * map.tileSize);
@@ -134,7 +138,7 @@ public class Character : MonoBehaviour {
 					rb.MovePosition(rb.position + down * map.tileSize / spd);
 				}
 			}
-		} else if(tile.j == 0 && lastdPress == direction.LEFT || tile.j == map.mapWidth - 1 && lastdPress == direction.RIGHT) {
+		} else if(tile.j == 0 && lastdPress == direction.LEFT || tile.j == MapGene.mapWidth - 1 && lastdPress == direction.RIGHT) {
 			if(distFromTile >= map.tileSize && distFromTile < 2 * map.tileSize) {
 				rb.MovePosition(nextTile.transform.position - (lastdPress == direction.LEFT ? left : right) * map.tileSize);
 			} else {
@@ -150,8 +154,8 @@ public class Character : MonoBehaviour {
 			
 		} else {
 			// This fixes a bug with looping around the map
-			if(tile.i == 0 && lastdPress == direction.DOWN || tile.i == map.mapHeight - 1 && lastdPress == direction.UP ||
-					tile.j == 0 && lastdPress == direction.RIGHT || tile.j == map.mapWidth - 1 && lastdPress == direction.LEFT) {
+			if(tile.i == 0 && lastdPress == direction.DOWN || tile.i == MapGene.mapHeight - 1 && lastdPress == direction.UP ||
+					tile.j == 0 && lastdPress == direction.RIGHT || tile.j == MapGene.mapWidth - 1 && lastdPress == direction.LEFT) {
 				if(distFromTile >= map.tileSize) {	// if we just looped around and then pressed the opposite direction
 					Tile temp = nextTile;
 					nextTile = tile;
@@ -164,19 +168,27 @@ public class Character : MonoBehaviour {
 			// Move in the direction from this tile to nextTile
 			Vector3 movVec = (nextTile.transform.position - tile.transform.position) / spd;
 			rb.MovePosition(rb.position + movVec);
+			if(this is Pacman) {
+				Debug.Log("tile: " + tile + "nextTile: " + nextTile);
+				Debug.Log("moving " + movVec);
+			}
 		}
-		if(Vector2.Distance(myPos, ntPos) <= map.tileSize / spd) {	// Reached a new tile
-			//Debug.Log("Initial tile: " + tile.gameObject.name);
-			tile = nextTile;
-			//Debug.Log("Moving to: " + tile.gameObject.name);
-			rb.MovePosition(nextTile.transform.position);
-			SetNextTile();
+		if(Vector2.Distance(myPos, ntPos) <= map.tileSize / spd) {  // Reached a new tile
+			ReachTile();
 		}
+	}
+
+	protected virtual void ReachTile() {
+		//Debug.Log("Initial tile: " + tile.gameObject.name);
+		tile = nextTile;
+		//Debug.Log("Moving to: " + tile.gameObject.name);
+		rb.MovePosition(nextTile.transform.position);
+		SetNextTile();
 	}
 
 	/**Get which direction we should go based on input and past input.
 	 */
-	private direction SetNextTile() {
+	protected virtual direction SetNextTile() {
 		if(!isAiOnly) {
 			if(lastdPress == direction.LEFT && tile.left.passable) {
 				nextTile = tile.left;
@@ -194,13 +206,14 @@ public class Character : MonoBehaviour {
 		}
 		// Last input would hit a wall
 		lastdPress = GetDefaultDirection(lastdPress);
+		Debug.Log(name + " moving " + lastdPress);
 		return lastdPress;
 	}
 
 	/**Returns the direction the player should go assuming the direction
 	 * they want to go (d) is blocked.
 	 */
-	private direction GetDefaultDirection(direction d) {
+	protected virtual direction GetDefaultDirection(direction d) {
 		if(d == direction.LEFT) {
 			if(lastv == direction.UP && tile.up.passable) {
 				nextTile = tile.up;
