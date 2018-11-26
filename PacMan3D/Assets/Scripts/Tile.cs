@@ -6,14 +6,16 @@ public class Tile : MonoBehaviour {
 	public bool passable;
 	public GameObject item;
 	public int i, j;
-	[HideInInspector] public Tile up, left, right, down;
+    [HideInInspector] public bool dirty = false;
+    [HideInInspector] public Tile up, left, right, down;
 
 	private void Reset() {
 
 	}
 
 	private void Start() {
-		
+        if (passable)
+            dirty = true;
 	}
 
 	/**Constructs a Tile
