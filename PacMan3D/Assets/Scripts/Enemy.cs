@@ -5,15 +5,27 @@ using System;
 using System.Linq;
 using System.IO;
 
+/// <Main Problem>
+/// 
+/// My final path is only returnning suck values. It shoudl be returning 
+/// many different directions. I have determined that the suck value 
+/// tentativeGscore is nearly always the same or less than the other options
+/// 
+/// I had a similar if not the exact same problem with the program for the 
+/// vaccume ai. i think the solution was that i was only pointing to the original 
+/// world and not creating new copies. I cant say this is the problem because
+/// i am going value by value assigning everything to the new copy. 
+/// 
+/// (dont worry about suck values in the final path i have built a way to 
+/// filter them out)  
+/// 
+/// </summary>
+
+
 public class Enemy : Character {
     public Transform player;
     protected direction where = direction.UP;
-    //_tile[,] tileMap = new _tile[28, 36];
-    //public _tile[,] tileMap = new _tile[28, 36];
-    //[TextArea(36, 36)]
-    //public string tilz;
-    //public string tilz; 
-    //public _tile[] til = new _tile[2];
+
     #region tileMap
     _tile[,] tileMap ={{new _tile(0, 0, false), new _tile(0, 1, false), new _tile(0, 2, false), new _tile(0, 3, false), new _tile(0, 4, false), new _tile(0, 5, false), new _tile(0, 6, false), new _tile(0, 7, false), new _tile(0, 8, false), new _tile(0, 9, false), new _tile(0, 10, false), new _tile(0, 11, false), new _tile(0, 12, false), new _tile(0, 13, false), new _tile(0, 14, false), new _tile(0, 15, false), new _tile(0, 16, false), new _tile(0, 17, false), new _tile(0, 18, false), new _tile(0, 19, false), new _tile(0, 20, false), new _tile(0, 21, false), new _tile(0, 22, false), new _tile(0, 23, false), new _tile(0, 24, false), new _tile(0, 25, false), new _tile(0, 26, false), new _tile(0, 27, false)},
 {new _tile(1, 0, false), new _tile(1, 1, false), new _tile(1, 2, false), new _tile(1, 3, false), new _tile(1, 4, false), new _tile(1, 5, false), new _tile(1, 6, false), new _tile(1, 7, false), new _tile(1, 8, false), new _tile(1, 9, false), new _tile(1, 10, false), new _tile(1, 11, false), new _tile(1, 12, false), new _tile(1, 13, false), new _tile(1, 14, false), new _tile(1, 15, false), new _tile(1, 16, false), new _tile(1, 17, false), new _tile(1, 18, false), new _tile(1, 19, false), new _tile(1, 20, false), new _tile(1, 21, false), new _tile(1, 22, false), new _tile(1, 23, false), new _tile(1, 24, false), new _tile(1, 25, false), new _tile(1, 26, false), new _tile(1, 27, false)},
@@ -65,11 +77,6 @@ public class Enemy : Character {
                 }
             }
         }
-        //Debug.Log("Element 0 tileMap is " + tileMap.GetLength(0));
-      //  Debug.Log("Element 1 tileMap is " + tileMap.GetLength(1));
-        //tileMap
-        //FindWorld();
-        // AstarSearch(new node(1000000000, 0, tileMap, nextTile.i, nextTile.j));
     }
 
     // confirming the tiles are depleting.
@@ -85,10 +92,10 @@ public class Enemy : Character {
         }
         return dirty;
     }
+    // using this heuristic instead of just dirty tiles way to inefficient 
     static int heuristic(int d, int w) {
         // d dist to closest dirty node 
         // w number of dirty nodes
-        
         return d * (w * 2 + 1) + w * w - 1;
     }
 
@@ -96,8 +103,7 @@ public class Enemy : Character {
     // this is because that check is failing. It only fails with this script not with 
     // character by itself. 
     protected override direction GetDefaultDirection(direction d) {
-        //List<node> myList =  new List<node>();
-        //Debug.Log("trying to default dir");
+       
         switch (where) {
             case direction.DOWN:
                 nextTile = tile.down;
@@ -114,7 +120,6 @@ public class Enemy : Character {
         }
         tileMap[nextTile.i, nextTile.j].dirty = false;
         return where;
-     //   return AstarSearch();
     }
     protected override void ReachTile()
     {
@@ -128,8 +133,6 @@ public class Enemy : Character {
     // it is unfinished and untested. 
     protected void AstarSearch(node start) {
         dirtyTiles = PhysicalDirtyTiles();
-        //   FindWorld();
-        // curItems = MapGene.numItems;
 
         string[] actions = new string[] { "Right", "Up", "Left", "Down", "Suck" };
         int countPath = 0;
@@ -139,52 +142,48 @@ public class Enemy : Character {
 
         openSet[0].FScore = heuristic(start.distToDirty(), start.getDirty().Count);
         openSet[0].GScore = 0;
-       // Debug.Log("trying to Astar");
         node curNode = openSet[0];
-        //buildGrid(curNode);
-      //  Debug.Log("trying to Astar");
+
         while (openSet.Count != 0) {
             curNode = openSet[0];
             if (countPath > 50) {
                 break;
             }
-          //  Debug.Log("dirtyCount = " + curNode.getDirty().Count);
             if (curNode.getDirty().Count == 0) { 
                 break;
             }
 
-            // perhaps a way to check if this has gone on for too long
             openSet.Remove(curNode);
             closedSet.Add(curNode);
 
             foreach (string a in actions) {
                 curNode.neighbors.Add(curNode.affect(a));
             }
-
+            
             foreach (node neighbor in curNode.neighbors) {
                 countPath++;
-                // i know for sure this skips over all nodes that are passable
+                // skips over all nodes that are not passable so only left with passible nodes
                 if (!tileMap[neighbor.agentPos[0], neighbor.agentPos[1]].passable) {
                     continue;
                 }
                 
-                
                 if (closedSet.Contains(neighbor))
                     continue;
-               
+
+                // Right here the the scores are being assigned to each node Im not sure whats 
+                // screwing with the tenative_gScore but i am fairly annoyed. It could be something 
+                // entirely indirectly releated and out of left field. 
                 int tenative_gScore = curNode.GScore + curNode.getActionCost(neighbor.direction);
 
-                if (!openSet.Contains(neighbor))
-                {
+                Debug.Log("agent at [" + neighbor.agentPos[0] + ", " + neighbor.agentPos[1]
+                                       + "]: tenGs =" + tenative_gScore + ", nGs = " + neighbor.GScore
+                                       + ", dir = " + neighbor.direction);
+
+                if (!openSet.Contains(neighbor)) {
                     openSet.Add(neighbor);
                 }
-                Debug.Log("agent at [" + neighbor.agentPos[0] + ", " + neighbor.agentPos[1] 
-                                       + "]: tenGs ="+tenative_gScore +", nGs = "+ neighbor.GScore 
-                                       + ", dir = "+ neighbor.direction);
-
-                if (tenative_gScore >= neighbor.GScore)
-                {
-                    
+                else if (tenative_gScore >= neighbor.GScore) {
+                    // for some reason this code is never called 
                     continue;
                 }
 
@@ -196,32 +195,29 @@ public class Enemy : Character {
         } 
         
         reconstructPath(curNode);
-    } 
-    // will get the amount of tiles with dots at that node 
-    // right now i just have it set to zero while i figure 
-    // everything out.
-    //int heuristic (int count) {
+    }
 
-    //    return 0;
-    //}
 
-    // returns the first node on the path 
-    //node prevNode;
+    // Basic function:      returns the first node on the path...
+    // this is not the final encarnation to this reconstruct function. the final will 
+    // go through the string "dirs" adding each nodes action the only action that is to 
+    // be returned is the final action which will be the first character in the string 
     protected direction reconstructPath(node curNode) {
-        //  int count = 0;
         string dirs = "";
         if (curNode.cameFrom != null) { 
             while (curNode.cameFrom.cameFrom != null) {
-             //   count++;
-                
                 curNode = curNode.cameFrom;
 
-                dirs += curNode.direction;
+                // this filters out the suck nodes while adding 
+                // up the nodes to the final path
+                if (curNode.direction != 's')
+                    dirs += curNode.direction;
             }
         }
-
+        // showing the full path of directions. 
         Debug.Log("dirs = " + dirs);
 
+        // is how you apply the actual direction 
         switch (curNode.direction){
             case 'u':
                 Debug.Log("Up");
@@ -243,7 +239,6 @@ public class Enemy : Character {
                 Debug.LogWarning("It tried to suck Shouldn't do that");
                 break;
         }
-        //where = direction.UP;
         return where;
     }
 }
@@ -257,12 +252,14 @@ public class _tile {
     public int[] location = new int[] { 0, 0 };
     public bool passable = false;
 
+    // this initializer is only used to create the initial dirty tiles in the scene
     public _tile(int x, int y, bool dirty) {
         location[0] = x;
         location[1] = y;
         this.dirty = dirty;
         passable = dirty;
     }
+    // anywhere else you make a _tile you use this initilization method here
     public _tile(int x, int y, bool dirty, bool passible) {
         location[0] = x;
         location[1] = y;
@@ -270,15 +267,15 @@ public class _tile {
         passable = passible;
     }
      
+    // I think something is wrong with copying either here or 
     public _tile Copy() {
         return new _tile(location[0], location[1], dirty, passable);
     }
 }
 
-// still determining the thints i need in this class 
-// may take some time 
+// I have more or less modeled this class off of the original code. With some additions and changes
+// to fit the program... Well i tried to at least. I believe this contains the main source of the problem
 public class node {
-    //public string acitonPer = "";
     public List<node> neighbors = new List<node>();
     public Vector3 pos;
     public int[] agentPos = new int[] { 1, 1 };
@@ -305,6 +302,9 @@ public class node {
     }
     public node affect(string action)
     {
+        // this is where i create a new world supposidly this is where i create new worlds.
+        // and not just point to old worlds... I had problems with this in the vaccume program.
+        // i dont see how this could be a problem here i have created the exact same set up 
         _tile[,] newWorld = new _tile[36, 28];
         for (int i = 0; i < newWorld.GetLength(0); i++) {
             for (int j = 0; j < newWorld.GetLength(1); j++) {
@@ -313,10 +313,11 @@ public class node {
         }
         
         int[] pos = new int[] { agentPos[0], agentPos[1] };
-       // Debug.Log("action = " + action);
+
+        // this actually assigns the values for the direction of the node. this time 
+        // i used characters instead of a string to change up down left right and suck
         switch (action) {
             case ("Right"):
-              //  Debug.Log("did try going right");
                 pos = new int[] { agentPos[0], Math.Min(27, agentPos[1] + 1) };
                 direction = 'r';
                 break;
@@ -337,13 +338,18 @@ public class node {
                 direction = 's';
                 break;
         }
+
+        // and here is where the actual node is created... bask in its probably broken glory
         var newNode = new node(int.MaxValue, int.MaxValue, newWorld, pos[0], pos[1]);
         newNode.direction = direction;
+
         return newNode;
     }
+
+    // This is one of the deciding factors to the tenGscore
     public int getActionCost(char action)
     {
-        //if (action == null) return 0;
+        if (action == '\0') return 0;
         if (action == 's' && world[agentPos[0], agentPos[1]].dirty)
         {
             return 1 + 2 * (getDirty().Count - 1);
@@ -362,6 +368,7 @@ public class node {
         return dirtyTiles;
         // check
     }
+    // using this again for distance to dirty tiles
     public int distToDirty()
     {
         var dirtyTiles = getDirty();
