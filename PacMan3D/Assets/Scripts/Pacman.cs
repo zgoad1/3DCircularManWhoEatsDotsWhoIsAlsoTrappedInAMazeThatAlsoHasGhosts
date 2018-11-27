@@ -109,7 +109,7 @@ public class Pacman : Character {
 			current.neighbors = new List<Node>();
 			foreach(direction a in actions) {
 				Node newNeighbor = current.affect(a);
-				if(newNeighbor != null && !OppositeDirection(newNeighbor.actionPerformed, current.actionPerformed))
+				if(newNeighbor != null)
 					current.neighbors.Add(newNeighbor);
 			}
 
