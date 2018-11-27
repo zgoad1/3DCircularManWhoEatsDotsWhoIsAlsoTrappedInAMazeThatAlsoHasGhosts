@@ -94,7 +94,7 @@ public class Pacman : Character {
 			// stop us from looping forever in a very bad programmer way
 			iterations++;
 
-			if(current == goal || iterations >= 200) {
+			if(current == goal || iterations >= 100) {
 				Node next = GetNextNode(current);
 				where = next.actionPerformed;
 				start = next;
@@ -109,7 +109,7 @@ public class Pacman : Character {
 			current.neighbors = new List<Node>();
 			foreach(direction a in actions) {
 				Node newNeighbor = current.affect(a);
-				if(newNeighbor != null)
+				if(newNeighbor != null && !OppositeDirection(newNeighbor.actionPerformed, current.actionPerformed))
 					current.neighbors.Add(newNeighbor);
 			}
 
@@ -212,7 +212,7 @@ class Node {
 			}
 		}
 		// erase the dot we just succed
-		newWorld[MapGene.mapHeight - 1 - agentPos.x, agentPos.y].item = Item.ItemType.NONE;
+		newWorld[agentPos[0], agentPos[1]].item = Item.ItemType.NONE;
 		Vector2Int newAgentPos = Vector2Int.zero;
 		switch(dir) {
 			case Character.direction.RIGHT:
@@ -230,7 +230,7 @@ class Node {
 				newAgentPos = new Vector2Int((agentPos.x + 1) % MapGene.mapHeight, agentPos.y);
 				break;
 		}
-		if(!world[MapGene.mapHeight - 1 - newAgentPos.x, newAgentPos.y].passable)
+		if(!world[newAgentPos.x, newAgentPos.y].passable)
 			return null;	// invalid action (hitting a wall)
 		Node n = new Node(newWorld, newAgentPos, dir);
 		//n.itemTiles = new List<TileData>(itemTiles.ToArray());
