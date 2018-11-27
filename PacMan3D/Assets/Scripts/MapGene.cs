@@ -86,6 +86,7 @@ public class MapGene : MonoBehaviour {
 			Vector3 tilePos = new Vector3(-mapW * tileSize / 2.0f + 0.5f, 0, mapH * tileSize / 2.0f - 0.5f);    // start creating tiles from the top left
 			for(int i = 0; i < mapString.Length; i++) {
 				if(mapString[i] != ' ' && mapString[i] != '\0') {  // ignore spaces and null chars
+					Debug.Log("mapString: '" + mapString[i] + "'\niteString: '" + itemString[i] + "'");
 					GameObject newTile = null;
 					if(mapString[i] == '+' || mapString[i] == '-' || mapString[i] == '|') {
 						// create floor tile (different chars will later influence the walls around them)

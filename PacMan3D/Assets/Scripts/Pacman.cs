@@ -14,8 +14,8 @@ public class Pacman : Character {
 		for(int i = 0; i < MapGene.mapHeight; i++) {
 			for(int j = 0; j < MapGene.mapWidth; j++) {
 				Item.ItemType t = map.tileMap[i, j].item == null ? Item.ItemType.NONE : map.tileMap[i, j].item.GetComponent<Item>().type;
-				startWorld[i, j] = new TileData(t, map.tileMap[i, j].i, map.tileMap[i, j].j, map.tileMap[i, j].passable);
-				goalWorld[i, j] = new TileData(Item.ItemType.NONE, map.tileMap[i, j].i, map.tileMap[i, j].j, map.tileMap[i, j].passable);
+				startWorld[MapGene.mapHeight - 1 - i, j] = new TileData(t, map.tileMap[i, j].i, map.tileMap[i, j].j, map.tileMap[i, j].passable);
+				goalWorld[MapGene.mapHeight - 1 - i, j] = new TileData(Item.ItemType.NONE, map.tileMap[i, j].i, map.tileMap[i, j].j, map.tileMap[i, j].passable);
 			}
 		}
 		Vector3 normCoords = GetNormalizedCoords(rb.position);
@@ -212,7 +212,7 @@ class Node {
 			}
 		}
 		// erase the dot we just succed
-		newWorld[agentPos[0], agentPos[1]].item = Item.ItemType.NONE;
+		newWorld[MapGene.mapHeight - 1 - agentPos.x, agentPos.y].item = Item.ItemType.NONE;
 		Vector2Int newAgentPos = Vector2Int.zero;
 		switch(dir) {
 			case Character.direction.RIGHT:
@@ -230,7 +230,7 @@ class Node {
 				newAgentPos = new Vector2Int((agentPos.x + 1) % MapGene.mapHeight, agentPos.y);
 				break;
 		}
-		if(!world[newAgentPos.x, newAgentPos.y].passable)
+		if(!world[MapGene.mapHeight - 1 - newAgentPos.x, newAgentPos.y].passable)
 			return null;	// invalid action (hitting a wall)
 		Node n = new Node(newWorld, newAgentPos, dir);
 		//n.itemTiles = new List<TileData>(itemTiles.ToArray());
