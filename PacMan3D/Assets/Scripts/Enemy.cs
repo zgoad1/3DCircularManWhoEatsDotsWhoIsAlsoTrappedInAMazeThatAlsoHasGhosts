@@ -92,6 +92,7 @@ public class Enemy : Character {
         }
         return dirty;
     }
+
     // using this heuristic instead of just dirty tiles way to inefficient 
     static int heuristic(int d, int w) {
         // d dist to closest dirty node 
@@ -175,9 +176,9 @@ public class Enemy : Character {
                 // entirely indirectly releated and out of left field. 
                 int tenative_gScore = curNode.GScore + curNode.getActionCost(neighbor.direction);
 
-                Debug.Log("agent at [" + neighbor.agentPos[0] + ", " + neighbor.agentPos[1]
-                                       + "]: tenGs =" + tenative_gScore + ", nGs = " + neighbor.GScore
-                                       + ", dir = " + neighbor.direction);
+                //Debug.Log("agent at [" + neighbor.agentPos[0] + ", " + neighbor.agentPos[1]
+                //                       + "]: tenGs =" + tenative_gScore + ", nGs = " + neighbor.GScore
+                //                       + ", dir = " + neighbor.direction);
 
                 if (!openSet.Contains(neighbor)) {
                     openSet.Add(neighbor);
@@ -203,7 +204,7 @@ public class Enemy : Character {
     // go through the string "dirs" adding each nodes action the only action that is to 
     // be returned is the final action which will be the first character in the string 
     protected direction reconstructPath(node curNode) {
-        string dirs = "";
+        string dirs = " ";
         if (curNode.cameFrom != null) { 
             while (curNode.cameFrom.cameFrom != null) {
                 curNode = curNode.cameFrom;
@@ -218,7 +219,7 @@ public class Enemy : Character {
         Debug.Log("dirs = " + dirs);
 
         // is how you apply the actual direction 
-        switch (curNode.direction){
+        switch (dirs[dirs.Length-1]){
             case 'u':
                 Debug.Log("Up");
                 where = direction.UP;
@@ -235,9 +236,10 @@ public class Enemy : Character {
                 Debug.Log("Right");
                 where = direction.RIGHT;
                 break;
-            case 's':
+            default:
                 Debug.LogWarning("It tried to suck Shouldn't do that");
                 break;
+
         }
         return where;
     }
@@ -347,18 +349,16 @@ public class node {
     }
 
     // This is one of the deciding factors to the tenGscore
-    public int getActionCost(char action)
-    {
+    public int getActionCost(char action) {
         if (action == '\0') return 0;
-        if (action == 's' && world[agentPos[0], agentPos[1]].dirty)
-        {
+        if (action == 's' && world[agentPos[0], agentPos[1]].dirty) {
             return 1 + 2 * (getDirty().Count - 1);
         }
         return 1 + 2 * getDirty().Count;
         // check
     }
-    public List<_tile> getDirty()
-    {
+    // ineffecient 
+    public List<_tile> getDirty() {
         var dirtyTiles = new List<_tile>();
         for (int i = 0; i < world.GetLength(0); i++)
             for (int j = 0; j < world.GetLength(1); j++)
