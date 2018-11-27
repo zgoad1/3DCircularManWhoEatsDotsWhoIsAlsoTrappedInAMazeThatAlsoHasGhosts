@@ -13,7 +13,7 @@ public class Pacman : Character {
 		TileData[,] startWorld = new TileData[MapGene.mapHeight, MapGene.mapWidth], goalWorld = new TileData[MapGene.mapHeight, MapGene.mapWidth];
 		for(int i = 0; i < MapGene.mapHeight; i++) {
 			for(int j = 0; j < MapGene.mapWidth; j++) {
-				Item.ItemType t = map.tileMap[i, j].item == null ? Item.ItemType.NONE : map.tileMap[i, j].item.GetComponent<Item>().type;
+				Item.ItemType t = map.tileMap[MapGene.mapHeight - 1 - i, j].item == null ? Item.ItemType.NONE : map.tileMap[MapGene.mapHeight - 1 - i, j].item.GetComponent<Item>().type;
 				startWorld[MapGene.mapHeight - 1 - i, j] = new TileData(t, map.tileMap[i, j].i, map.tileMap[i, j].j, map.tileMap[i, j].passable);
 				goalWorld[MapGene.mapHeight - 1 - i, j] = new TileData(Item.ItemType.NONE, map.tileMap[i, j].i, map.tileMap[i, j].j, map.tileMap[i, j].passable);
 			}
@@ -65,7 +65,7 @@ public class Pacman : Character {
 
 	private Node GetNextNode(Node c) {
 		if(c.cameFrom == null) {
-			ExplosionManager.GoBoom();
+			FindObjectOfType<ExplosionManager>().GoBoom();
 			return c;
 		}
 		if(c.cameFrom.cameFrom == null)
@@ -94,7 +94,7 @@ public class Pacman : Character {
 			// stop us from looping forever in a very bad programmer way
 			iterations++;
 
-			if(current == goal || iterations >= 100) {
+			if(current == goal || iterations >= 20) {
 				Node next = GetNextNode(current);
 				where = next.actionPerformed;
 				start = next;

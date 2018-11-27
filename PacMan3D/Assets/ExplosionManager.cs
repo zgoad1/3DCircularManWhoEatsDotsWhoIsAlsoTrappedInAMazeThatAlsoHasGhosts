@@ -34,14 +34,15 @@ public class ExplosionManager : MonoBehaviour {
 		}
 	}
 
-	public static void GoBoom() {
+	[ContextMenu("Go boom")]
+	public void GoBoom() {
 		if(!wentBoom) {
 			foreach(Rigidbody rb in rbs) {
 				if(rb != null) {
 					Character c = rb.gameObject.GetComponent<Character>();
 					if(c != null) c.enabled = false;
 					rb.isKinematic = false;
-					Vector3 force = new Vector3(Random.Range(-1f, 1f), Random.Range(0f, 1f), Random.Range(-1f, 1f)) * 10;//(rb.transform.position - origin);
+					Vector3 force = new Vector3(Random.Range(-1f, 1f), Random.Range(0f, 0.8f), Random.Range(-1f, 1f)) * 15;//(rb.transform.position - origin);
 					rb.AddForceAtPosition(force * Random.Range(0.5f, 4f), origin, ForceMode.VelocityChange);
 					rb.AddTorque(new Vector3(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f)) * Random.Range(-300f, 360f) * 100f, ForceMode.VelocityChange);
 					//rb.AddForce((rb.transform.position - origin) * 2, ForceMode.VelocityChange);
