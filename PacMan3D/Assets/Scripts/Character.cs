@@ -44,6 +44,12 @@ public class Character : MonoBehaviour {
 		LEFT, RIGHT, UP, DOWN
 	};
 
+	protected bool OppositeDirection(direction a, direction b) {
+		int sum = (int)a + (int)b;
+		Debug.Log("sum: " + sum);
+		return sum == 1 || sum == 5;
+	}
+
 	protected void Reset() {
 		map = FindObjectOfType<MapGene>();
 		rb = GetComponent<Rigidbody>();
@@ -59,9 +65,12 @@ public class Character : MonoBehaviour {
 		Reset();
 		Vector3 normCoords = GetNormalizedCoords(rb.position);
 		tile = map.tileMap[MapGene.mapHeight - 1 - Mathf.FloorToInt(normCoords.z), Mathf.FloorToInt(normCoords.x)];
-		nextTile = tile.up;
+		nextTile = tile;
 		hAxis = "P" + playerNum + "Horizontal";
 		vAxis = "P" + playerNum + "Vertical";
+		if(!(this is Pacman)) ReachTile();	// sets next tile based on logic
+											// (Pacman does it at the end of his own start method, but the rest of
+											// this method must be called at the start of Pacman's start)
 	}
 	
 	// Update is called once per frame
@@ -169,8 +178,8 @@ public class Character : MonoBehaviour {
 			Vector3 movVec = (nextTile.transform.position - tile.transform.position) / spd;
 			rb.MovePosition(rb.position + movVec);
 			if(this is Pacman) {
-				Debug.Log("tile: " + tile + "nextTile: " + nextTile);
-				Debug.Log("moving " + movVec);
+				//Debug.Log("tile: " + tile + "nextTile: " + nextTile);
+				//Debug.Log("moving " + movVec);
 			}
 		}
 		if(Vector2.Distance(myPos, ntPos) <= map.tileSize / spd) {  // Reached a new tile
@@ -206,7 +215,7 @@ public class Character : MonoBehaviour {
 		}
 		// Last input would hit a wall
 		lastdPress = GetDefaultDirection(lastdPress);
-		Debug.Log(name + " moving " + lastdPress);
+		//Debug.Log(name + " moving " + lastdPress);
 		return lastdPress;
 	}
 

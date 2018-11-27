@@ -25,19 +25,23 @@ public class MapGene : MonoBehaviour {
 		floorTile = Resources.Load<GameObject>("floorTile");
 		wallTile = Resources.Load<GameObject>("wallTile");
 		mapFile = Resources.Load<TextAsset>("map");
-		mapString = mapFile.text;
 		itemFile = Resources.Load<TextAsset>("items");
-		itemString = itemFile.text;
 		dot = Resources.Load<GameObject>("dot");
 		bigDot = Resources.Load<GameObject>("bigDot");
 		fruit = Resources.Load<GameObject>("fruit");
+	}
+
+	[ContextMenu("Set map strings")]
+	public void SetMapStrings() {
+		mapString = mapFile.text;
+		itemString = itemFile.text;
 		string[] mapArray = mapString.Split('\n');
 		mapW = mapArray[0].Length / 2; // there's an extra char (either ' ' or '\n') for every tile; must divide by 2
 		mapH = mapArray.Length;
 		mapWidth = mapW;
 		mapHeight = mapH;
 		Debug.Log("Map width: " + mapW + "\nMap height: " + mapH);
-		int itemWidth = mapString.Split('\n')[0].Length / 2; 
+		int itemWidth = mapString.Split('\n')[0].Length / 2;
 		if(itemWidth != mapW) inconsistentSizeError = true;
 	}
 
@@ -46,10 +50,18 @@ public class MapGene : MonoBehaviour {
 		mapWidth = mapW;
 		mapHeight = mapH;
 		ParseMapString();
+		ExplosionManager.AddRbs(FindObjectOfType<ExplosionManager>().Characters);
+		ExplosionManager.AddRbs(FindObjectOfType<ExplosionManager>().Tiles);
 	}
 
 	[ContextMenu("Generate map")]
 	void ParseMapString() {
+		string[] mapArray = mapString.Split('\n');
+		mapW = mapArray[0].Length / 2; // there's an extra char (either ' ' or '\n') for every tile; must divide by 2
+		mapH = mapArray.Length;
+		mapWidth = mapW;
+		mapHeight = mapH;
+		Debug.Log("Map width: " + mapW + "\nMap height: " + mapH);
 		// get an object to parent the tiles to so we don't clutter up the object list
 		GameObject par = GameObject.Find("Tiles");
 		if(par == null) {
@@ -101,6 +113,7 @@ public class MapGene : MonoBehaviour {
 								itemPrefab = fruit;
 								break;
 							default:
+								Debug.Log("FOUSANE  AD OT1@!! CUZE FO '" + itemString[i] + "'");
 								itemPrefab = dot;
 								break;
 						}
