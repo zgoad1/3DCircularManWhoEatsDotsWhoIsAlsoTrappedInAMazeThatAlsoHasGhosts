@@ -39,6 +39,17 @@ public class Character : MonoBehaviour {
 	protected direction lastdPress = direction.UP;
 	protected Vector2 tPos = Vector2.zero, ntPos = Vector2.zero, myPos = Vector2.zero;
 	protected static Vector3 left = new Vector3(-1, 0, 0), right = new Vector3(1, 0, 0), up = new Vector3(0, 0, 1), down = new Vector3(0, 0, -1);
+	//protected static List<Vector2Int> ghostPositions = new List<Vector2Int>();
+	protected static Dictionary<Character, Vector2Int> ghostPositions = new Dictionary<Character, Vector2Int>();
+	public static state charState = state.NORMAL;
+	protected Vector3 origin = new Vector3(0, 0.7f, 0);
+	protected MeshRenderer rendy;
+	protected Material[] imaterials;
+	[SerializeField] protected static Material ghostBlue, unlitWhite;
+
+	public enum state {
+		NORMAL, REVERSE
+	};
 
 	public enum direction {
 		LEFT, RIGHT, UP, DOWN
@@ -50,6 +61,10 @@ public class Character : MonoBehaviour {
 		return sum == 1 || sum == 5;
 	}
 
+	public static bool TheresAGhostHere(Vector2Int pos) {
+		return ghostPositions.ContainsValue(pos);
+	}
+
 	protected void Reset() {
 		map = FindObjectOfType<MapGene>();
 		rb = GetComponent<Rigidbody>();
@@ -58,11 +73,14 @@ public class Character : MonoBehaviour {
 		rb.useGravity = false;
 		rb.isKinematic = true;
 		GetComponent<SphereCollider>().radius = 0.4f;
+		rendy = GetComponent<MeshRenderer>();
 	}
 
 	// Use this for initialization
 	protected virtual void Start () {
 		Reset();
+		ghostBlue = Resources.Load<Material>("ghost_blue");
+		unlitWhite = Resources.Load<Material>("white_unlit");
 		Vector3 normCoords = GetNormalizedCoords(rb.position);
 		tile = map.tileMap[Mathf.FloorToInt(normCoords.z), Mathf.FloorToInt(normCoords.x)];
 		nextTile = tile;
@@ -73,12 +91,27 @@ public class Character : MonoBehaviour {
 											// this method must be called at the start of Pacman's start)
 		myPos.x = rb.position.x;
 		myPos.y = rb.position.z;
+		if(!(this is Pacman)) {
+			ghostPositions.Add(this, Vector2Int.zero);
+
+			// set imaterials
+			foreach(Character c in ghostPositions.Keys) {
+				for(int i = 0; i < c.rendy.materials.Length; i++) {
+					imaterials[i] = c.rendy.materials[i];   // either rendy or materials is null for someone
+				}
+			}
+		}
 	}
 	
 	// Update is called once per frame
 	void Update () {
 		myPos.x = rb.position.x;
 		myPos.y = rb.position.z;
+		if(!(this is Pacman)) {
+			Vector3 normCoords = GetNormalizedCoords(rb.position);
+			ghostPositions[this] = new Vector2Int((int)normCoords.z, (int)normCoords.x);
+			Debug.Log("ghost position: " + ghostPositions[this]);
+		}
 		if(!isAiOnly) {
 			if(Input.GetAxisRaw(hAxis) > 0) {
 				lasth = direction.RIGHT;
@@ -101,8 +134,55 @@ public class Character : MonoBehaviour {
 		}
 	}
 
+	public static void ChangeState(state s) {
+		if(s == state.NORMAL) {
+			SetMaterials(state.NORMAL);
+			charState = state.NORMAL;
+		} else {
+			SetMaterials(state.REVERSE);
+			charState = state.REVERSE;
+			// start a coroutine that works as a timer for the reverse state
+			Character ob = FindObjectOfType<Character>();
+			ob.StopCoroutine("GoBackNormal");
+			ob.StartCoroutine("GoBackNormal");
+		}
+	}
+
+	protected static void SetMaterials(state s) {
+		if(s == state.NORMAL) {
+			foreach(Character c in ghostPositions.Keys) {
+				for(int i = 0; i < c.rendy.materials.Length; i++) {
+					c.rendy.materials[i] = c.imaterials[i];
+				}
+			}
+		} else {
+			foreach(Character c in ghostPositions.Keys) {
+				c.rendy.materials[0] = ghostBlue;
+				c.rendy.materials[1] = ghostBlue;
+				c.rendy.materials[2] = unlitWhite;
+				c.rendy.materials[3] = unlitWhite;
+			}
+		}
+	}
+
+	protected IEnumerator GoBackNormal() {
+		yield return new WaitForSeconds(8);
+		for(int i = 0; i < 5; i++) {
+			SetMaterials(state.NORMAL);
+			yield return new WaitForSeconds(0.2f);
+			SetMaterials(state.REVERSE);
+			yield return new WaitForSeconds(0.2f);
+		}
+		ChangeState(state.REVERSE);
+	}
+
 	protected void FixedUpdate() {
 		Move();
+	}
+
+	public void Relocate() {
+		rb.MovePosition(origin);
+		Reset();
 	}
 
 	/*

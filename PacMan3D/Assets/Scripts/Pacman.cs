@@ -26,6 +26,24 @@ public class Pacman : Character {
 		ReachTile();
 	}
 
+	private void OnTriggerEnter(Collider other) {
+		// make items disappear upon hitting them
+		if(other.gameObject.GetComponent<Item>() != null) {
+			other.GetComponent<Renderer>().enabled = false;
+			if(other.gameObject.GetComponent<Item>().type == Item.ItemType.BIGDOT) {
+				ChangeState(state.REVERSE);
+			}
+		} else if(other.gameObject.GetComponent<Character>() != null) {
+			if(charState == state.NORMAL) {
+				// game over for Pac-Man
+				FindObjectOfType<ExplosionManager>().GoBoom();
+			} else {
+				// kill a ghost
+				other.gameObject.GetComponent<Character>().Relocate();
+			}
+		}
+	}
+
 	protected override direction GetDefaultDirection(direction d) {
 		switch(where) {
 			case direction.DOWN:
@@ -91,7 +109,7 @@ public class Pacman : Character {
 			// stop us from looping forever in a very bad programmer way
 			iterations++;
 
-			if(current == goal || iterations >= 250) {
+			if(current == goal || iterations >= 100) {
 				Node next = GetNextNode(current);
 				where = next.actionPerformed;
 				start = next;
@@ -234,7 +252,7 @@ class Node {
 				newAgentPos = new Vector2Int((agentPos.x + 1) % MapGene.mapHeight, agentPos.y);
 				break;
 		}
-		if(!world[newAgentPos.x, newAgentPos.y].passable)
+		if(!world[newAgentPos.x, newAgentPos.y].passable || Character.TheresAGhostHere(newAgentPos))
 			return null;	// invalid action (hitting a wall)
 		Node n = new Node(newWorld, newAgentPos, dir);
 		n.cameFrom = this;

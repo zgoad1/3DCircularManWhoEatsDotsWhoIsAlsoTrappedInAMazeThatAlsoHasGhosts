@@ -9,6 +9,8 @@ ModelImporter:
     2100002: Color__ghost_tex_orange
     2100004: Eye_white__ghost_tex_orange
     2100006: Eye_black__ghost_tex_orange
+    2100008: Cloth__ghost_tex_orange
+    2100010: Mouth_001__ghost_tex_orange
     2300000: //RootNode
     3300000: //RootNode
     4300000: Cube
@@ -30,6 +32,11 @@ ModelImporter:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: Eye_white__ghost_tex_orange
+    second: {fileID: 2100000, guid: d214c24176d5f38438bc7ac442d43bcd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Mouth_001__ghost_tex_orange
     second: {fileID: 2100000, guid: d214c24176d5f38438bc7ac442d43bcd, type: 2}
   materials:
     importMaterials: 1
@@ -102,7 +109,6 @@ ModelImporter:
     legStretch: 0.05
     feetSpacing: 0
     rootMotionBoneName: 
-    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
     hasTranslationDoF: 0
     hasExtraRoot: 0
     skeletonHasParents: 1

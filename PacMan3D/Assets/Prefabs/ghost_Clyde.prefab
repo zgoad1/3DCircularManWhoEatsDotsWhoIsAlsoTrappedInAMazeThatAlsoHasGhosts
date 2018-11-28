@@ -63,6 +63,7 @@ MeshRenderer:
   - {fileID: 2100000, guid: 4ac75e6954b4323498a561a54c5d0b31, type: 2}
   - {fileID: 2100000, guid: d214c24176d5f38438bc7ac442d43bcd, type: 2}
   - {fileID: 2100000, guid: bf28d809baf1709409603689c6983b2d, type: 2}
+  - {fileID: 2100000, guid: 4ac75e6954b4323498a561a54c5d0b31, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -133,7 +134,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 835cce9b81020a54bb822edcf1910bd4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerNum: 1
   speed: 24
+  isAiOnly: 0
   map: {fileID: 0}
 --- !u!135 &135941965461986554
 SphereCollider:

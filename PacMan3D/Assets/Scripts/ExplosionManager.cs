@@ -34,6 +34,12 @@ public class ExplosionManager : MonoBehaviour {
 		}
 	}
 
+	private void Update() {
+		if(Input.GetKeyDown(KeyCode.Space)) {
+			GoBoom();
+		}
+	}
+
 	[ContextMenu("Go boom")]
 	public void GoBoom() {
 		if(!wentBoom) {
