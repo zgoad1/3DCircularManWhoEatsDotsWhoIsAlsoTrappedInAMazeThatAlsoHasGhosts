@@ -44,9 +44,9 @@ public class Character : MonoBehaviour {
 		LEFT, RIGHT, UP, DOWN
 	};
 
-	protected bool OppositeDirection(direction a, direction b) {
+	public static bool OppositeDirection(direction a, direction b) {
 		int sum = (int)a + (int)b;
-		Debug.Log("sum: " + sum);
+		//Debug.Log("sum: " + sum);
 		return sum == 1 || sum == 5;
 	}
 
@@ -64,36 +64,37 @@ public class Character : MonoBehaviour {
 	protected virtual void Start () {
 		Reset();
 		Vector3 normCoords = GetNormalizedCoords(rb.position);
-		tile = map.tileMap[MapGene.mapHeight - 1 - Mathf.FloorToInt(normCoords.z), Mathf.FloorToInt(normCoords.x)];
+		tile = map.tileMap[Mathf.FloorToInt(normCoords.z), Mathf.FloorToInt(normCoords.x)];
 		nextTile = tile;
 		hAxis = "P" + playerNum + "Horizontal";
 		vAxis = "P" + playerNum + "Vertical";
-		if(!(this is Pacman)) ReachTile();	// sets next tile based on logic
+		if(!(this is Pacman)) ReachTile();  // sets next tile based on logic
 											// (Pacman does it at the end of his own start method, but the rest of
 											// this method must be called at the start of Pacman's start)
+		myPos.x = rb.position.x;
+		myPos.y = rb.position.z;
 	}
 	
 	// Update is called once per frame
 	void Update () {
 		myPos.x = rb.position.x;
 		myPos.y = rb.position.z;
-		// Stuff is reversed because I accidentally drew the map in the reverse order. Oops.
 		if(!isAiOnly) {
 			if(Input.GetAxisRaw(hAxis) > 0) {
-				lasth = direction.LEFT;
+				lasth = direction.RIGHT;
 				lastdPress = lasth;
 				//Debug.Log("RIGHT pressed");
 			} else if(Input.GetAxisRaw(hAxis) < 0) {
-				lasth = direction.RIGHT;
+				lasth = direction.LEFT;
 				lastdPress = lasth;
 				//Debug.Log("LEFT pressed");
 			}
 			if(Input.GetAxisRaw(vAxis) < 0) {
-				lastv = direction.UP;
+				lastv = direction.DOWN;
 				lastdPress = lastv;
 				//Debug.Log("DOWN pressed");
 			} else if(Input.GetAxisRaw(vAxis) > 0) {
-				lastv = direction.DOWN;
+				lastv = direction.UP;
 				lastdPress = lastv;
 				//Debug.Log("UP pressed");
 			}
@@ -121,7 +122,7 @@ public class Character : MonoBehaviour {
 	*/
 
 	protected Vector3 GetNormalizedCoords(Vector3 pos) {
-		Vector3 normCoords = new Vector3(pos.x + MapGene.mapWidth * map.tileSize / 2.0f, pos.y, pos.z + MapGene.mapHeight * map.tileSize / 2.0f);
+		Vector3 normCoords = new Vector3(pos.x + MapGene.mapWidth * map.tileSize / 2.0f, pos.y, -pos.z + MapGene.mapHeight * map.tileSize / 2.0f);
 		return normCoords;
 	}
 
@@ -177,10 +178,10 @@ public class Character : MonoBehaviour {
 			// Move in the direction from this tile to nextTile
 			Vector3 movVec = (nextTile.transform.position - tile.transform.position) / spd;
 			rb.MovePosition(rb.position + movVec);
-			if(this is Pacman) {
+			//if(this is Pacman) {
 				//Debug.Log("tile: " + tile + "nextTile: " + nextTile);
 				//Debug.Log("moving " + movVec);
-			}
+			//}
 		}
 		if(Vector2.Distance(myPos, ntPos) <= map.tileSize / spd) {  // Reached a new tile
 			ReachTile();

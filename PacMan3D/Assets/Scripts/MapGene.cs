@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class MapGene : MonoBehaviour {
-	
+
+	public int numMaps = 3;
+	public int mapIndex = 1;
 	[SerializeField] [TextArea(36, 36)] private string mapString;
 	[SerializeField] [TextArea(36, 36)] private string itemString;
 	[SerializeField] private TextAsset mapFile;
@@ -24,19 +26,20 @@ public class MapGene : MonoBehaviour {
 		// Set default variable values
 		floorTile = Resources.Load<GameObject>("floorTile");
 		wallTile = Resources.Load<GameObject>("wallTile");
-		mapFile = Resources.Load<TextAsset>("map");
-		itemFile = Resources.Load<TextAsset>("items");
+		mapFile = Resources.Load<TextAsset>("map1");
+		itemFile = Resources.Load<TextAsset>("items1");
 		dot = Resources.Load<GameObject>("dot");
 		bigDot = Resources.Load<GameObject>("bigDot");
 		fruit = Resources.Load<GameObject>("fruit");
 	}
-
-	[ContextMenu("Set map strings")]
-	public void SetMapStrings() {
+	
+	public void SetMapStrings(int mapIndex) {
+		mapFile = Resources.Load<TextAsset>("map" + mapIndex);
+		itemFile = Resources.Load<TextAsset>("items" + mapIndex);
 		mapString = mapFile.text;
 		itemString = itemFile.text;
 		string[] mapArray = mapString.Split('\n');
-		mapW = mapArray[0].Length / 2; // there's an extra char (either ' ' or '\n') for every tile; must divide by 2
+		mapW = (mapArray[0].Length + 1) / 2; // there's an extra ' ' for every tile and it doesn't count the '\n'; must add 1 and divide by 2
 		mapH = mapArray.Length;
 		mapWidth = mapW;
 		mapHeight = mapH;
@@ -49,15 +52,18 @@ public class MapGene : MonoBehaviour {
 	void Awake () {
 		mapWidth = mapW;
 		mapHeight = mapH;
-		ParseMapString();
+		ParseMapString(mapIndex);
 		ExplosionManager.AddRbs(FindObjectOfType<ExplosionManager>().Characters);
 		ExplosionManager.AddRbs(FindObjectOfType<ExplosionManager>().Tiles);
 	}
-
-	[ContextMenu("Generate map")]
-	void ParseMapString() {
+	
+	public void ParseMapString(int mapIndex) {
+		this.mapIndex = mapIndex;
+		SetMapStrings(mapIndex);
 		string[] mapArray = mapString.Split('\n');
-		mapW = mapArray[0].Length / 2; // there's an extra char (either ' ' or '\n') for every tile; must divide by 2
+		mapW = (mapArray[0].Length + 1) / 2; // there's an extra ' ' for every tile and it doesn't count the '\n'; must add 1 and divide by 2
+		Debug.Log("maparray[0]: " + mapArray[0] + "\nlength: " + mapArray[0].Length);
+		Debug.Log("maparray[1]: " + mapArray[1] + "\nlength: " + mapArray[1].Length);
 		mapH = mapArray.Length;
 		mapWidth = mapW;
 		mapHeight = mapH;
@@ -86,7 +92,7 @@ public class MapGene : MonoBehaviour {
 			Vector3 tilePos = new Vector3(-mapW * tileSize / 2.0f + 0.5f, 0, mapH * tileSize / 2.0f - 0.5f);    // start creating tiles from the top left
 			for(int i = 0; i < mapString.Length; i++) {
 				if(mapString[i] != ' ' && mapString[i] != '\0') {  // ignore spaces and null chars
-					Debug.Log("mapString: '" + mapString[i] + "'\niteString: '" + itemString[i] + "'");
+					//Debug.Log("mapString: '" + mapString[i] + "'\niteString: '" + itemString[i] + "'");
 					GameObject newTile = null;
 					if(mapString[i] == '+' || mapString[i] == '-' || mapString[i] == '|') {
 						// create floor tile (different chars will later influence the walls around them)
@@ -114,7 +120,7 @@ public class MapGene : MonoBehaviour {
 								itemPrefab = fruit;
 								break;
 							default:
-								Debug.Log("FOUSANE  AD OT1@!! CUZE FO '" + itemString[i] + "'");
+								//Debug.Log("FOUSANE  AD OT1@!! CUZE FO '" + itemString[i] + "'");
 								itemPrefab = dot;
 								break;
 						}

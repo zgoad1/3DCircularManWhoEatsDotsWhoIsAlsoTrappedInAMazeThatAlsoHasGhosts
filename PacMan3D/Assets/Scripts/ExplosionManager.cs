@@ -24,11 +24,11 @@ public class ExplosionManager : MonoBehaviour {
 		foreach(Transform t in objects) {
 			Rigidbody rb = t.gameObject.GetComponent<Rigidbody>();
 			if(rb == null) {
-				Debug.Log("adding rb to " + t.gameObject.name);
+				//Debug.Log("adding rb to " + t.gameObject.name);
 				rb = t.gameObject.AddComponent<Rigidbody>();
 				rb.isKinematic = true;
 			} else {
-				Debug.Log("found rb on " + t.gameObject.name);
+				//Debug.Log("found rb on " + t.gameObject.name);
 			}
 			rbs.Add(rb);
 		}

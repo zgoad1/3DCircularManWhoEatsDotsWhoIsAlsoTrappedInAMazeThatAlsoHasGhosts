@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Pacman : Character {
-	protected direction where = direction.DOWN;
+	protected direction where = (direction)(-5);
 	private Node start, goal;
 	private static direction[] actions = new direction[] { direction.DOWN, direction.LEFT, direction.RIGHT, direction.UP };
 
@@ -13,15 +13,16 @@ public class Pacman : Character {
 		TileData[,] startWorld = new TileData[MapGene.mapHeight, MapGene.mapWidth], goalWorld = new TileData[MapGene.mapHeight, MapGene.mapWidth];
 		for(int i = 0; i < MapGene.mapHeight; i++) {
 			for(int j = 0; j < MapGene.mapWidth; j++) {
-				Item.ItemType t = map.tileMap[MapGene.mapHeight - 1 - i, j].item == null ? Item.ItemType.NONE : map.tileMap[MapGene.mapHeight - 1 - i, j].item.GetComponent<Item>().type;
-				startWorld[MapGene.mapHeight - 1 - i, j] = new TileData(t, map.tileMap[i, j].i, map.tileMap[i, j].j, map.tileMap[i, j].passable);
-				goalWorld[MapGene.mapHeight - 1 - i, j] = new TileData(Item.ItemType.NONE, map.tileMap[i, j].i, map.tileMap[i, j].j, map.tileMap[i, j].passable);
+				Item.ItemType t = map.tileMap[i, j].item == null ? Item.ItemType.NONE : map.tileMap[i, j].item.GetComponent<Item>().type;
+				startWorld[i, j] = new TileData(t, i, j, map.tileMap[i, j].passable);
+				goalWorld[i, j] = new TileData(Item.ItemType.NONE, i, j, map.tileMap[i, j].passable);
 			}
 		}
 		Vector3 normCoords = GetNormalizedCoords(rb.position);
 		Vector2Int coords = new Vector2Int((int)normCoords.z, (int)normCoords.x);
 		start = new Node(startWorld, coords, where);
 		goal = new Node(goalWorld, coords, where);
+		start.goal = goal;
 		ReachTile();
 	}
 
@@ -51,8 +52,12 @@ public class Pacman : Character {
 		base.ReachTile();
 	}
 
+	// d = distance to "dirty"
+	// w = # of "dirty" tiles
 	protected float Heuristic(float d, int w) {
-		return d * (2 * 2 + 1) + w * w - 1;
+		// this heuristic is perfectly accurate assuming all the
+		// "dirty tiles" can be "succed" contiguously
+		return d * (w * 2 + 1) + w * (w + 1);
 	}
 
 	private Node GetMinFscore(List<Node> list) {
@@ -71,14 +76,6 @@ public class Pacman : Character {
 		if(c.cameFrom.cameFrom == null)
 			return c;
 		return GetNextNode(c.cameFrom);
-		/*
-		Node next = c, prev = null;
-		while(next != null) {
-			prev = next;
-			next = next.cameFrom;
-		}
-		return prev;
-		*/
 	}
 
 	protected void Astar() {
@@ -94,7 +91,7 @@ public class Pacman : Character {
 			// stop us from looping forever in a very bad programmer way
 			iterations++;
 
-			if(current == goal || iterations >= 20) {
+			if(current == goal || iterations >= 250) {
 				Node next = GetNextNode(current);
 				where = next.actionPerformed;
 				start = next;
@@ -108,9 +105,11 @@ public class Pacman : Character {
 
 			current.neighbors = new List<Node>();
 			foreach(direction a in actions) {
-				Node newNeighbor = current.affect(a);
-				if(newNeighbor != null)
-					current.neighbors.Add(newNeighbor);
+				//if(!OppositeDirection(a, current.actionPerformed)) {
+					Node newNeighbor = current.affect(a);
+					if(newNeighbor != null)
+						current.neighbors.Add(newNeighbor);
+				//}
 			}
 
 			foreach(Node n in current.neighbors) {
@@ -122,12 +121,11 @@ public class Pacman : Character {
 				} else if(tempgscore >= n.gscore) {
 					continue;
 				}
-
-				n.cameFrom = current;
+				
 				n.gscore = tempgscore;
 				n.fscore = n.gscore + Heuristic(n.DistToItem(), n.GetItemTiles().Count) + (OppositeDirection(n.actionPerformed, current.actionPerformed) ? 1 : 0);
 			}
-			//Debug.Log("caete");
+			Debug.Log("caete");
 		}
 	}
 }
@@ -167,6 +165,7 @@ class Node {
 	public Vector2Int agentPos;
 	public Character.direction actionPerformed;
 	public Node cameFrom;
+	public Node goal;
 
 	List<TileData> itemTiles;
 
@@ -208,17 +207,22 @@ class Node {
 		TileData[,] newWorld = new TileData[MapGene.mapHeight, MapGene.mapWidth];
 		for(int i = 0; i < MapGene.mapHeight; i++) {
 			for(int j = 0; j < MapGene.mapWidth; j++) {
-				newWorld[i, j] = world[i, j].Copy();
+				// erase the dot we just succed
+				if(i == agentPos.x && j == agentPos.y)
+					newWorld[i, j] = goal.world[i, j];
+				else
+					newWorld[i, j] = world[i, j];
+				//newWorld[i, j] = world[i, j].Copy();
 			}
 		}
 		// erase the dot we just succed
-		newWorld[agentPos[0], agentPos[1]].item = Item.ItemType.NONE;
+		//newWorld[agentPos[0], agentPos[1]].item = Item.ItemType.NONE;
 		Vector2Int newAgentPos = Vector2Int.zero;
 		switch(dir) {
 			case Character.direction.RIGHT:
 				newAgentPos = new Vector2Int(agentPos.x, (agentPos.y + 1) % MapGene.mapWidth);
 				break;
-			case Character.direction.DOWN:
+			case Character.direction.UP:
 				int newx = agentPos.x - 1;
 				newAgentPos = new Vector2Int(newx < 0 ? MapGene.mapHeight + newx : newx, agentPos.y);
 				break;
@@ -226,13 +230,15 @@ class Node {
 				int newy = agentPos.y - 1;
 				newAgentPos = new Vector2Int(agentPos.x, newy < 0 ? MapGene.mapWidth + newy : newy);
 				break;
-			case Character.direction.UP:
+			case Character.direction.DOWN:
 				newAgentPos = new Vector2Int((agentPos.x + 1) % MapGene.mapHeight, agentPos.y);
 				break;
 		}
 		if(!world[newAgentPos.x, newAgentPos.y].passable)
 			return null;	// invalid action (hitting a wall)
 		Node n = new Node(newWorld, newAgentPos, dir);
+		n.cameFrom = this;
+		n.goal = goal;
 		//n.itemTiles = new List<TileData>(itemTiles.ToArray());
 		n.itemTiles = new List<TileData>();
 		for(int i = 0; i < itemTiles.Count; i++) {
@@ -251,7 +257,9 @@ class Node {
 		} else {
 			//Debug.Log("cate");
 		}
-		return 1 + 2 * (GetItemTiles().Count - (world[agentPos[0],agentPos[1]].item != Item.ItemType.NONE ? 1 : 0));
+		int dirtyTiles = GetItemTiles().Count - (world[agentPos[0], agentPos[1]].item != Item.ItemType.NONE ? 1 : 0);
+		int turnAround = cameFrom == null ? 0 : (Character.OppositeDirection(dir, cameFrom.actionPerformed) ? 1 : 0) * 5;
+		return 1 + 2 * dirtyTiles;// + turnAround;
 	}
 
 	public float DistBetween(TileData t1, TileData t2) {
@@ -274,8 +282,10 @@ class Node {
 		float dist = Mathf.Infinity;
 		foreach(TileData n in items) {
 			float newDist = DistBetween(world[agentPos.x, agentPos.y], n);
-			if(newDist < dist) dist = newDist;
-			if(newDist <= 0) return newDist;
+			if(newDist < dist)
+				dist = newDist;
+			if(newDist <= 0)
+				return newDist;
 		}
 		return dist;
 	}
