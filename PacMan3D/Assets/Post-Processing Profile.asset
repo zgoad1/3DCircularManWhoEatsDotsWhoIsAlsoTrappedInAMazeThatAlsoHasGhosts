@@ -77,11 +77,11 @@ MonoBehaviour:
       useCameraFov: 0
       kernelSize: 1
   motionBlur:
-    m_Enabled: 1
+    m_Enabled: 0
     m_Settings:
-      shutterAngle: 128
-      sampleCount: 16
-      frameBlending: 0.3
+      shutterAngle: 360
+      sampleCount: 17
+      frameBlending: 1
   eyeAdaptation:
     m_Enabled: 0
     m_Settings:
@@ -101,13 +101,13 @@ MonoBehaviour:
     m_Settings:
       bloom:
         intensity: 0.5
-        threshold: 2.5
-        softKnee: 0.5
-        radius: 3.72
+        threshold: 1.2
+        softKnee: 0.75
+        radius: 3.78
         antiFlicker: 1
       lensDirt:
         texture: {fileID: 0}
-        intensity: 3
+        intensity: 6.51
   colorGrading:
     m_Enabled: 1
     m_Settings:
@@ -305,27 +305,27 @@ MonoBehaviour:
       lut: {fileID: 0}
       contribution: 1
   chromaticAberration:
-    m_Enabled: 0
+    m_Enabled: 1
     m_Settings:
-      spectralTexture: {fileID: 0}
-      intensity: 0.1
+      spectralTexture: {fileID: 2800000, guid: 78204c6f03306fd45b6d555aa5c63e00, type: 3}
+      intensity: 0.7
   grain:
     m_Enabled: 0
     m_Settings:
       colored: 1
-      intensity: 0.5
-      size: 1
-      luminanceContribution: 0.8
+      intensity: 0.611
+      size: 0.5
+      luminanceContribution: 1
   vignette:
-    m_Enabled: 0
+    m_Enabled: 1
     m_Settings:
       mode: 0
-      color: {r: 0, g: 0, b: 0, a: 1}
+      color: {r: 1, g: 0, b: 0, a: 1}
       center: {x: 0.5, y: 0.5}
-      intensity: 0.23
+      intensity: 0.4
       smoothness: 1
       roundness: 1
-      mask: {fileID: 0}
+      mask: {fileID: 2800000, guid: 78204c6f03306fd45b6d555aa5c63e00, type: 3}
       opacity: 1
       rounded: 1
   dithering:

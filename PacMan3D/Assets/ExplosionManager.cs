@@ -37,6 +37,7 @@ public class ExplosionManager : MonoBehaviour {
 	[ContextMenu("Go boom")]
 	public void GoBoom() {
 		if(!wentBoom) {
+			//FindObjectOfType<Camera>().projectionMatrix = Matrix4x4.Perspective(92f, 16f / 9f, 0.01f, 1000f);	// set camera projection to perspective
 			foreach(Rigidbody rb in rbs) {
 				if(rb != null) {
 					Character c = rb.gameObject.GetComponent<Character>();
