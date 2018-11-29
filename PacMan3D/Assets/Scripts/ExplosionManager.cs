@@ -43,12 +43,18 @@ public class ExplosionManager : MonoBehaviour {
 	[ContextMenu("Go boom")]
 	public void GoBoom() {
 		if(!wentBoom) {
+			wentBoom = true;
 			//FindObjectOfType<Camera>().projectionMatrix = Matrix4x4.Perspective(92f, 16f / 9f, 0.01f, 1000f);	// set camera projection to perspective
 			foreach(Rigidbody rb in rbs) {
 				if(rb != null) {
 					Character c = rb.gameObject.GetComponent<Character>();
 					if(c != null) c.enabled = false;
+					else {
+						Item i = rb.gameObject.GetComponent<Item>();
+						if(i != null) i.enabled = false;
+					}
 					rb.isKinematic = false;
+					rb.useGravity = true;
 					Vector3 force = new Vector3(Random.Range(-1f, 1f), Random.Range(0f, 0.8f), Random.Range(-1f, 1f)) * 15;//(rb.transform.position - origin);
 					rb.AddForceAtPosition(force * Random.Range(0.5f, 4f), origin, ForceMode.VelocityChange);
 					rb.AddTorque(new Vector3(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f)) * Random.Range(-300f, 360f) * 100f, ForceMode.VelocityChange);

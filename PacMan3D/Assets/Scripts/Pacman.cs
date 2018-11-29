@@ -72,10 +72,22 @@ public class Pacman : Character {
 
 	// d = distance to "dirty"
 	// w = # of "dirty" tiles
-	protected float Heuristic(float d, int w) {
+	protected float Heuristic(float d, int w, Vector2Int agentPos) {
 		// this heuristic is perfectly accurate assuming all the
 		// "dirty tiles" can be "succed" contiguously
-		return d * (w * 2 + 1) + w * (w + 1);
+		float dist = GetDistPenalty(agentPos);
+		return d * (w * 2 + 1) + w * (w + 1) + (dist * (dist + 1)) / 2;
+	}
+
+	// get the penalty point cost for proximity to ghosts
+	public static float GetDistPenalty(Vector2Int agentPos) {
+		float dist = Mathf.Infinity; // distance to nearest ghost
+		foreach(Character g in ghostPositions.Keys) {
+			float newDist = Vector2Int.Distance(agentPos, ghostPositions[g]);
+			if(newDist < dist)
+				dist = newDist;
+		}
+		return Mathf.Max(0, 8 - dist);
 	}
 
 	private Node GetMinFscore(List<Node> list) {
@@ -101,7 +113,7 @@ public class Pacman : Character {
 		List<Node> openSet = new List<Node>();
 		openSet.Add(start);
 		start.gscore = 0;
-		start.fscore = Heuristic(start.DistToItem(), start.GetItemTiles().Count);
+		start.fscore = Heuristic(start.DistToItem(), start.GetItemTiles().Count, start.agentPos);
 		int iterations = 0;
 		while(openSet.Count > 0) {
 			Node current = GetMinFscore(openSet);
@@ -109,7 +121,7 @@ public class Pacman : Character {
 			// stop us from looping forever in a very bad programmer way
 			iterations++;
 
-			if(current == goal || iterations >= 100) {
+			if(current == goal || iterations >= 50) {
 				Node next = GetNextNode(current);
 				where = next.actionPerformed;
 				start = next;
@@ -139,11 +151,11 @@ public class Pacman : Character {
 				} else if(tempgscore >= n.gscore) {
 					continue;
 				}
-				
+
 				n.gscore = tempgscore;
-				n.fscore = n.gscore + Heuristic(n.DistToItem(), n.GetItemTiles().Count) + (OppositeDirection(n.actionPerformed, current.actionPerformed) ? 1 : 0);
+				n.fscore = n.gscore + Heuristic(n.DistToItem(), n.GetItemTiles().Count, n.agentPos);// + (OppositeDirection(n.actionPerformed, current.actionPerformed) ? 1 : 0);
 			}
-			Debug.Log("caete");
+			//Debug.Log("caete");
 		}
 	}
 }
@@ -277,7 +289,7 @@ class Node {
 		}
 		int dirtyTiles = GetItemTiles().Count - (world[agentPos[0], agentPos[1]].item != Item.ItemType.NONE ? 1 : 0);
 		int turnAround = cameFrom == null ? 0 : (Character.OppositeDirection(dir, cameFrom.actionPerformed) ? 1 : 0) * 5;
-		return 1 + 2 * dirtyTiles;// + turnAround;
+		return 1 + 2 * dirtyTiles + (int)Pacman.GetDistPenalty(agentPos);// + turnAround;
 	}
 
 	public float DistBetween(TileData t1, TileData t2) {

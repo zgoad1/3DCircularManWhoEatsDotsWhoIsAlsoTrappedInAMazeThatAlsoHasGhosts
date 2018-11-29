@@ -40,12 +40,10 @@ public class Character : MonoBehaviour {
 	protected Vector2 tPos = Vector2.zero, ntPos = Vector2.zero, myPos = Vector2.zero;
 	protected static Vector3 left = new Vector3(-1, 0, 0), right = new Vector3(1, 0, 0), up = new Vector3(0, 0, 1), down = new Vector3(0, 0, -1);
 	//protected static List<Vector2Int> ghostPositions = new List<Vector2Int>();
-	protected static Dictionary<Character, Vector2Int> ghostPositions = new Dictionary<Character, Vector2Int>();
+	public static Dictionary<Character, Vector2Int> ghostPositions = new Dictionary<Character, Vector2Int>();
 	public static state charState = state.NORMAL;
 	protected Vector3 origin = new Vector3(0, 0.7f, 0);
 	protected MeshRenderer rendy;
-	protected Material[] imaterials;
-	[SerializeField] protected static Material ghostBlue, unlitWhite;
 
 	public enum state {
 		NORMAL, REVERSE
@@ -79,8 +77,6 @@ public class Character : MonoBehaviour {
 	// Use this for initialization
 	protected virtual void Start () {
 		Reset();
-		ghostBlue = Resources.Load<Material>("ghost_blue");
-		unlitWhite = Resources.Load<Material>("white_unlit");
 		Vector3 normCoords = GetNormalizedCoords(rb.position);
 		tile = map.tileMap[Mathf.FloorToInt(normCoords.z), Mathf.FloorToInt(normCoords.x)];
 		nextTile = tile;
@@ -93,13 +89,6 @@ public class Character : MonoBehaviour {
 		myPos.y = rb.position.z;
 		if(!(this is Pacman)) {
 			ghostPositions.Add(this, Vector2Int.zero);
-
-			// set imaterials
-			foreach(Character c in ghostPositions.Keys) {
-				for(int i = 0; i < c.rendy.materials.Length; i++) {
-					imaterials[i] = c.rendy.materials[i];   // either rendy or materials is null for someone
-				}
-			}
 		}
 	}
 	
@@ -110,7 +99,6 @@ public class Character : MonoBehaviour {
 		if(!(this is Pacman)) {
 			Vector3 normCoords = GetNormalizedCoords(rb.position);
 			ghostPositions[this] = new Vector2Int((int)normCoords.z, (int)normCoords.x);
-			Debug.Log("ghost position: " + ghostPositions[this]);
 		}
 		if(!isAiOnly) {
 			if(Input.GetAxisRaw(hAxis) > 0) {
@@ -138,9 +126,21 @@ public class Character : MonoBehaviour {
 		if(s == state.NORMAL) {
 			SetMaterials(state.NORMAL);
 			charState = state.NORMAL;
+			Tile.amplitude = 0;
+			Character[] ghosts = new Character[4];
+			ghostPositions.Keys.CopyTo(ghosts, 0);
+			foreach(Character c in ghosts) {
+				c.speed *= 2f;
+			}
 		} else {
 			SetMaterials(state.REVERSE);
 			charState = state.REVERSE;
+			Tile.amplitude = 2;
+			Character[] ghosts = new Character[4];
+			ghostPositions.Keys.CopyTo(ghosts, 0);
+			foreach(Character c in ghosts) {
+				c.speed *= 0.5f;
+			}
 			// start a coroutine that works as a timer for the reverse state
 			Character ob = FindObjectOfType<Character>();
 			ob.StopCoroutine("GoBackNormal");
@@ -149,20 +149,24 @@ public class Character : MonoBehaviour {
 	}
 
 	protected static void SetMaterials(state s) {
-		if(s == state.NORMAL) {
-			foreach(Character c in ghostPositions.Keys) {
-				for(int i = 0; i < c.rendy.materials.Length; i++) {
-					c.rendy.materials[i] = c.imaterials[i];
-				}
-			}
-		} else {
-			foreach(Character c in ghostPositions.Keys) {
-				c.rendy.materials[0] = ghostBlue;
-				c.rendy.materials[1] = ghostBlue;
-				c.rendy.materials[2] = unlitWhite;
-				c.rendy.materials[3] = unlitWhite;
-			}
-		}
+		MaterialAnimator.ChangeState(s);
+		//if(s == state.NORMAL) {
+		//	//foreach(Character c in ghostPositions.Keys) {
+		//	//	for(int i = 0; i < c.rendy.materials.Length; i++) {
+		//	//		Debug.Log("ghost: " + c);
+		//	//		c.rendy.materials[i] = c.imaterials[i];
+		//	//	}
+		//	//}
+		//} else {
+		//	//Character[] ghosts = new Character[4];
+		//	//ghostPositions.Keys.CopyTo(ghosts, 0);
+		//	//foreach(Character c in ghosts) { 
+		//	//	c.rendy.materials[0] = ghostBlue;
+		//	//	c.rendy.materials[1] = ghostBlue;
+		//	//	c.rendy.materials[2] = unlitWhite;
+		//	//	c.rendy.materials[3] = unlitWhite;
+		//	//}
+		//}
 	}
 
 	protected IEnumerator GoBackNormal() {
@@ -173,7 +177,7 @@ public class Character : MonoBehaviour {
 			SetMaterials(state.REVERSE);
 			yield return new WaitForSeconds(0.2f);
 		}
-		ChangeState(state.REVERSE);
+		ChangeState(state.NORMAL);
 	}
 
 	protected void FixedUpdate() {
@@ -181,7 +185,8 @@ public class Character : MonoBehaviour {
 	}
 
 	public void Relocate() {
-		rb.MovePosition(origin);
+		//rb.MovePosition(origin);
+		transform.position = origin;
 		Reset();
 	}
 

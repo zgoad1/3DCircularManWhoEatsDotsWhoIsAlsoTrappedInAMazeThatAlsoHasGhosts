@@ -6,39 +6,26 @@ public class Tile : MonoBehaviour {
 	public bool passable;
 	public GameObject item = null;
 	public int i, j;
+	private Vector3 newScale;
+	private float iy;
+	private float distance;
+	private float amp, ampScale = 0;
+	private float per = 3;
+	public static float amplitude = 0;
 	[HideInInspector] public Tile up, left, right, down;
 
-	private void Reset() {
-
-	}
-
 	private void Start() {
-		
+		distance = Random.Range(0f, 10f);//Vector3.Distance(transform.position, Vector3.zero);
+		amp = Random.Range(0.2f, 0.8f);
+		ampScale = 0;
+		per = 3;
+		newScale = transform.localScale;
+		iy = newScale.z;
 	}
 
-	/**Constructs a Tile
-	 * loc - location of the Tile in 3D space
-	 * passable - whether the Tile should be a floor tile or a wall
-	 * item - the item to spawn on the tile, if applicable (ignored if not passable)
-	 */
-	public Tile(Vector3 loc, bool passable, GameObject item) {
-		transform.position = loc;
-		this.item = item;
-	}
-
-	/*
-	void OnDrawGizmos() {
-		Gizmos.color = Color.blue;
-		//Gizmos.DrawLine(transform.position, target.position);	// target?
-
-		if(item.type == Item.ItemType.DOT)
-			Gizmos.color = Color.red;
-
-		Gizmos.DrawSphere(transform.position, 2);
-	}
-	*/
-
-	public Tile Copy() {
-		return new Tile(transform.position, passable, item);
+	private void Update() {
+		ampScale = Mathf.Lerp(ampScale, amplitude, 0.1f);
+		newScale.z = iy + amp * ampScale * Mathf.Sin(-2 * Mathf.PI / per * Time.time + distance);
+		transform.localScale = newScale;
 	}
 }
