@@ -70,6 +70,7 @@ public class Pacman : Character {
 		Vector2Int coords = new Vector2Int((int)normCoords.z, (int)normCoords.x);
 		start.agentPos = coords;
 		start.world[coords.x, coords.y] = goal.world[coords.x, coords.y];
+		goal.agentPos = GetNearestGhostPos(coords);
 		Astar(start);
 		base.ReachTile();
 	}
@@ -83,14 +84,23 @@ public class Pacman : Character {
 		return d * (w * 2 + 1) + w * (w + 1) + (dist * (dist + 1)) / 2;
 	}
 
-	// get the penalty point cost for proximity to ghosts
-	public static float GetDistPenalty(Vector2Int agentPos) {
+	public static Vector2Int GetNearestGhostPos(Vector2Int agentPos) {
 		float dist = Mathf.Infinity; // distance to nearest ghost
+		Vector2Int nearest = ghostPositions[instance];
 		foreach(Character g in ghostPositions.Keys) {
 			float newDist = Vector2Int.Distance(agentPos, ghostPositions[g]);
-			if(newDist < dist)
+			if(newDist < dist) {
 				dist = newDist;
+				nearest = ghostPositions[g];
+			}
 		}
+		return nearest;
+	}
+
+	// get the penalty point cost for proximity to ghosts
+	public static float GetDistPenalty(Vector2Int agentPos) {
+		if(charState == state.REVERSE) return 0;
+		float dist = Vector2Int.Distance(agentPos, GetNearestGhostPos(agentPos));
 		return Mathf.Max(0, 8 - dist);
 	}
 
@@ -222,15 +232,20 @@ class Node {
 		// both are nodes
 		if(n1.GetItemTiles().Count == 0 && n2.GetItemTiles().Count == 0)
 			return true;
-		else
+		if(Character.charState == Character.state.NORMAL) {
+			// use normal comparison
 			//Debug.Log("n1: " + n1.GetItemTiles().Count + ", n2: " + n2.GetItemTiles().Count);
-		for(int i = 0; i < MapGene.mapHeight; i++) {
-			for(int j = 0; j < MapGene.mapWidth; j++) {
-				if(n1.world[i, j].item != n2.world[i, j].item)
-					return false;
+			for(int i = 0; i < MapGene.mapHeight; i++) {
+				for(int j = 0; j < MapGene.mapWidth; j++) {
+					if(n1.world[i, j].item != n2.world[i, j].item)
+						return false;
+				}
 			}
-		}
 		return n1.agentPos == n2.agentPos;
+		} else {
+			// node is goal if agentPos is the same
+			return n1.agentPos == n2.agentPos;
+		}
 	}
 	public static bool operator !=(Node n1, Node n2) {
 		return !(n1 == n2);
@@ -268,7 +283,7 @@ class Node {
 				newAgentPos = new Vector2Int((agentPos.x + 1) % MapGene.mapHeight, agentPos.y);
 				break;
 		}
-		if(!world[newAgentPos.x, newAgentPos.y].passable || Character.TheresAGhostHere(newAgentPos))
+		if(!world[newAgentPos.x, newAgentPos.y].passable || Character.TheresAGhostHere(newAgentPos) && Character.charState != Character.state.REVERSE)
 			return null;	// invalid action (hitting a wall)
 		Node n = new Node(newWorld, newAgentPos, dir);
 		n.cameFrom = this;

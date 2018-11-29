@@ -44,6 +44,7 @@ public class Character : MonoBehaviour {
 	public static state charState = state.NORMAL;
 	protected Vector3 origin = new Vector3(0, 0.7f, 0);
 	protected MeshRenderer rendy;
+	public static Character instance;
 
 	public enum state {
 		NORMAL, REVERSE
@@ -90,6 +91,9 @@ public class Character : MonoBehaviour {
 		if(!(this is Pacman)) {
 			ghostPositions.Add(this, Vector2Int.zero);
 		}
+		if(instance == null && !(this is Pacman)) {
+			instance = this;
+		}
 	}
 	
 	// Update is called once per frame
@@ -129,20 +133,18 @@ public class Character : MonoBehaviour {
 			Tile.amplitude = 0;
 			Character[] ghosts = new Character[4];
 			ghostPositions.Keys.CopyTo(ghosts, 0);
-			FindObjectOfType<Pacman>().speed = 24;
-			//foreach(Character c in ghosts) {
-			//	c.speed *= 2f;
-			//}
+			foreach(Character c in ghosts) {
+				c.speed *= 2f;
+			}
 		} else {
 			SetMaterials(state.REVERSE);
 			charState = state.REVERSE;
 			Tile.amplitude = 2;
 			Character[] ghosts = new Character[4];
 			ghostPositions.Keys.CopyTo(ghosts, 0);
-			FindObjectOfType<Pacman>().speed = 26;
-			//foreach(Character c in ghosts) {
-			//	c.speed *= 0.5f;
-			//}
+			foreach(Character c in ghosts) {
+				c.speed *= 0.5f;
+			}
 			// start a coroutine that works as a timer for the reverse state
 			Character ob = FindObjectOfType<Character>();
 			ob.StopCoroutine("GoBackNormal");
