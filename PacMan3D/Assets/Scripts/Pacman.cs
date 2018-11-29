@@ -99,9 +99,9 @@ public class Pacman : Character {
 
 	// get the penalty point cost for proximity to ghosts
 	public static float GetDistPenalty(Vector2Int agentPos) {
-		if(charState == state.REVERSE) return 0;
+		//if(charState == state.REVERSE) return 0;
 		float dist = Vector2Int.Distance(agentPos, GetNearestGhostPos(agentPos));
-		return Mathf.Max(0, 8 - dist);
+		return Mathf.Max(0, charState == state.NORMAL ? 8 - dist : dist);
 	}
 
 	private Node GetMinFscore(List<Node> list) {

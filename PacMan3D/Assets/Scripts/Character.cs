@@ -133,6 +133,7 @@ public class Character : MonoBehaviour {
 			Tile.amplitude = 0;
 			Character[] ghosts = new Character[4];
 			ghostPositions.Keys.CopyTo(ghosts, 0);
+			FindObjectOfType<Pacman>().speed = 26;
 			foreach(Character c in ghosts) {
 				//c.speed *= 2f;
 				//c.transform.position = c.tile.transform.position + origin;
@@ -143,6 +144,7 @@ public class Character : MonoBehaviour {
 			Tile.amplitude = 2;
 			Character[] ghosts = new Character[4];
 			ghostPositions.Keys.CopyTo(ghosts, 0);
+			FindObjectOfType<Pacman>().speed = 28;
 			foreach(Character c in ghosts) {
 				//c.speed *= 0.5f;
 				//c.transform.position = c.tile.transform.position + origin;
