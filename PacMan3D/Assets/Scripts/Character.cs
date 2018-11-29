@@ -42,7 +42,7 @@ public class Character : MonoBehaviour {
 	//protected static List<Vector2Int> ghostPositions = new List<Vector2Int>();
 	public static Dictionary<Character, Vector2Int> ghostPositions = new Dictionary<Character, Vector2Int>();
 	public static state charState = state.NORMAL;
-	protected Vector3 origin = new Vector3(0, 0.7f, 0);
+	protected static Vector3 origin = new Vector3(0, 0.7f, 0);
 	protected MeshRenderer rendy;
 	public static Character instance;
 
@@ -134,7 +134,8 @@ public class Character : MonoBehaviour {
 			Character[] ghosts = new Character[4];
 			ghostPositions.Keys.CopyTo(ghosts, 0);
 			foreach(Character c in ghosts) {
-				c.speed *= 2f;
+				//c.speed *= 2f;
+				//c.transform.position = c.tile.transform.position + origin;
 			}
 		} else {
 			SetMaterials(state.REVERSE);
@@ -143,7 +144,8 @@ public class Character : MonoBehaviour {
 			Character[] ghosts = new Character[4];
 			ghostPositions.Keys.CopyTo(ghosts, 0);
 			foreach(Character c in ghosts) {
-				c.speed *= 0.5f;
+				//c.speed *= 0.5f;
+				//c.transform.position = c.tile.transform.position + origin;
 			}
 			// start a coroutine that works as a timer for the reverse state
 			Character ob = FindObjectOfType<Character>();
@@ -189,7 +191,7 @@ public class Character : MonoBehaviour {
 	}
 
 	public void Relocate() {
-		//rb.MovePosition(origin);
+		//transform.position = origin);
 		transform.position = origin;
 		Reset();
 	}
@@ -226,25 +228,25 @@ public class Character : MonoBehaviour {
 		if(tile.i == 0 && lastdPress == direction.UP || tile.i == MapGene.mapHeight - 1 && lastdPress == direction.DOWN) {
 			// If we've passed the edge of the map, loop around to the other side
 			if(distFromTile >= map.tileSize && distFromTile < 2 * map.tileSize) {
-				rb.MovePosition(nextTile.transform.position - (lastdPress == direction.UP ? up : down) * map.tileSize);
+				transform.position = nextTile.transform.position - (lastdPress == direction.UP ? up : down) * map.tileSize;
 				//new Vector3(rb.position.x, rb.position.y, -rb.position.z);	// this way caused bugs
 			} else {
 				// Not ready to loop around yet, keep going until we pass up this tile
 				// (can't use nextTile in computations here since this is an edge case where nextTile is all the way across the map)
 				if(lastdPress == direction.UP) {
-					rb.MovePosition(rb.position + up * map.tileSize / spd);
+					transform.position = rb.position + up * map.tileSize / spd;
 				} else {
-					rb.MovePosition(rb.position + down * map.tileSize / spd);
+					transform.position = rb.position + down * map.tileSize / spd;
 				}
 			}
 		} else if(tile.j == 0 && lastdPress == direction.LEFT || tile.j == MapGene.mapWidth - 1 && lastdPress == direction.RIGHT) {
 			if(distFromTile >= map.tileSize && distFromTile < 2 * map.tileSize) {
-				rb.MovePosition(nextTile.transform.position - (lastdPress == direction.LEFT ? left : right) * map.tileSize);
+				transform.position = nextTile.transform.position - (lastdPress == direction.LEFT ? left : right) * map.tileSize;
 			} else {
 				if(lastdPress == direction.LEFT) {
-					rb.MovePosition(rb.position + left * map.tileSize / spd);
+					transform.position = rb.position + left * map.tileSize / spd;
 				} else {
-					rb.MovePosition(rb.position + right * map.tileSize / spd);
+					transform.position = rb.position + right * map.tileSize / spd;
 				}
 			}
 		////////////////////////////////
@@ -266,13 +268,13 @@ public class Character : MonoBehaviour {
 			}
 			// Move in the direction from this tile to nextTile
 			Vector3 movVec = (nextTile.transform.position - tile.transform.position) / spd;
-			rb.MovePosition(rb.position + movVec);
+			transform.position = rb.position + movVec;
 			//if(this is Pacman) {
 				//Debug.Log("tile: " + tile + "nextTile: " + nextTile);
 				//Debug.Log("moving " + movVec);
 			//}
 		}
-		if(Vector2.Distance(myPos, ntPos) <= map.tileSize / spd) {  // Reached a new tile
+		if(Vector2.Distance(myPos, ntPos) <= map.tileSize / spd || Vector2.Distance(myPos, tPos) >= map.tileSize) {  // Reached a new tile
 			ReachTile();
 		}
 	}
@@ -281,7 +283,7 @@ public class Character : MonoBehaviour {
 		//Debug.Log("Initial tile: " + tile.gameObject.name);
 		tile = nextTile;
 		//Debug.Log("Moving to: " + tile.gameObject.name);
-		rb.MovePosition(nextTile.transform.position);
+		transform.position = nextTile.transform.position;
 		SetNextTile();
 	}
 
