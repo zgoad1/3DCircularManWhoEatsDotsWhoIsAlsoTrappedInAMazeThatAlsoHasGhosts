@@ -129,18 +129,20 @@ public class Character : MonoBehaviour {
 			Tile.amplitude = 0;
 			Character[] ghosts = new Character[4];
 			ghostPositions.Keys.CopyTo(ghosts, 0);
-			foreach(Character c in ghosts) {
-				c.speed *= 2f;
-			}
+			FindObjectOfType<Pacman>().speed = 24;
+			//foreach(Character c in ghosts) {
+			//	c.speed *= 2f;
+			//}
 		} else {
 			SetMaterials(state.REVERSE);
 			charState = state.REVERSE;
 			Tile.amplitude = 2;
 			Character[] ghosts = new Character[4];
 			ghostPositions.Keys.CopyTo(ghosts, 0);
-			foreach(Character c in ghosts) {
-				c.speed *= 0.5f;
-			}
+			FindObjectOfType<Pacman>().speed = 26;
+			//foreach(Character c in ghosts) {
+			//	c.speed *= 0.5f;
+			//}
 			// start a coroutine that works as a timer for the reverse state
 			Character ob = FindObjectOfType<Character>();
 			ob.StopCoroutine("GoBackNormal");

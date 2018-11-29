@@ -66,7 +66,11 @@ public class Pacman : Character {
 		//tile.item.GetComponent<Item>().type = Item.ItemType.NONE;
 		Destroy(tile.item);
 		tile.item = null;
-		Astar();
+		Vector3 normCoords = GetNormalizedCoords(rb.position);
+		Vector2Int coords = new Vector2Int((int)normCoords.z, (int)normCoords.x);
+		start.agentPos = coords;
+		start.world[coords.x, coords.y] = goal.world[coords.x, coords.y];
+		Astar(start);
 		base.ReachTile();
 	}
 
@@ -108,7 +112,7 @@ public class Pacman : Character {
 		return GetNextNode(c.cameFrom);
 	}
 
-	protected void Astar() {
+	private void Astar(Node start) {
 		List<Node> closedSet = new List<Node>();
 		List<Node> openSet = new List<Node>();
 		openSet.Add(start);
@@ -124,8 +128,8 @@ public class Pacman : Character {
 			if(current == goal || iterations >= 50) {
 				Node next = GetNextNode(current);
 				where = next.actionPerformed;
-				start = next;
-				start.cameFrom = null;  // forget the past. there is only the future.
+				//start = next;
+				//start.cameFrom = null;  // forget the past. there is only the future.
 										// (keeps GetNextNode from messing up)
 				Debug.Log("Astar chose " + next.actionPerformed);
 				return;
