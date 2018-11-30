@@ -39,7 +39,7 @@ public class Pacman : Character {
 				FindObjectOfType<ExplosionManager>().GoBoom();
 			} else {
 				// kill a ghost
-				other.gameObject.GetComponent<Character>().Relocate();
+				other.gameObject.GetComponent<Character>().Murder();
 			}
 		}
 	}
@@ -67,7 +67,7 @@ public class Pacman : Character {
 		Destroy(tile.item);
 		tile.item = null;
 		Vector3 normCoords = GetNormalizedCoords(rb.position);
-		Vector2Int coords = new Vector2Int((int)normCoords.z, (int)normCoords.x);
+		Vector2Int coords = new Vector2Int(Mathf.FloorToInt(normCoords.z), Mathf.FloorToInt(normCoords.x));
 		start.agentPos = coords;
 		start.world[coords.x, coords.y] = goal.world[coords.x, coords.y];
 		goal.agentPos = GetNearestGhostPos(coords);
@@ -84,8 +84,11 @@ public class Pacman : Character {
 		return d * (w * 2 + 1) + w * (w + 1) + (dist * (dist + 1)) / 2;
 	}
 
+	// get the Vector2Int position of the nearest ghost.
+	// return 0 if all ghosts are ded.
 	public static Vector2Int GetNearestGhostPos(Vector2Int agentPos) {
 		float dist = Mathf.Infinity; // distance to nearest ghost
+		if(instance == null) return Vector2Int.zero;
 		Vector2Int nearest = ghostPositions[instance];
 		foreach(Character g in ghostPositions.Keys) {
 			float newDist = Vector2Int.Distance(agentPos, ghostPositions[g]);
@@ -114,7 +117,7 @@ public class Pacman : Character {
 
 	private Node GetNextNode(Node c) {
 		if(c.cameFrom == null) {
-			FindObjectOfType<ExplosionManager>().GoBoom();
+			if(charState != state.REVERSE) FindObjectOfType<ExplosionManager>().GoBoom();
 			return c;
 		}
 		if(c.cameFrom.cameFrom == null)
@@ -135,13 +138,14 @@ public class Pacman : Character {
 			// stop us from looping forever in a very bad programmer way
 			iterations++;
 
-			if(current == goal || iterations >= 50) {
+			if(current == goal || iterations >= 200) {
 				Node next = GetNextNode(current);
 				where = next.actionPerformed;
 				//start = next;
 				//start.cameFrom = null;  // forget the past. there is only the future.
-										// (keeps GetNextNode from messing up)
+				// (keeps GetNextNode from messing up)
 				Debug.Log("Astar chose " + next.actionPerformed);
+				Debug.Log("Nearest ghost: " + GetNearestGhostPos(current.agentPos));
 				return;
 			}
 			openSet.Remove(current);
@@ -150,9 +154,9 @@ public class Pacman : Character {
 			current.neighbors = new List<Node>();
 			foreach(direction a in actions) {
 				//if(!OppositeDirection(a, current.actionPerformed)) {
-					Node newNeighbor = current.affect(a);
-					if(newNeighbor != null)
-						current.neighbors.Add(newNeighbor);
+				Node newNeighbor = current.affect(a);
+				if(newNeighbor != null)
+					current.neighbors.Add(newNeighbor);
 				//}
 			}
 
@@ -232,7 +236,7 @@ class Node {
 		// both are nodes
 		if(n1.GetItemTiles().Count == 0 && n2.GetItemTiles().Count == 0)
 			return true;
-		if(Character.charState == Character.state.NORMAL) {
+		if(Character.charState == Character.state.NORMAL || n1.agentPos == Vector2Int.zero || n2.agentPos == Vector2Int.zero) {
 			// use normal comparison
 			//Debug.Log("n1: " + n1.GetItemTiles().Count + ", n2: " + n2.GetItemTiles().Count);
 			for(int i = 0; i < MapGene.mapHeight; i++) {
@@ -241,7 +245,7 @@ class Node {
 						return false;
 				}
 			}
-		return n1.agentPos == n2.agentPos;
+			return n1.agentPos == n2.agentPos;
 		} else {
 			// node is goal if agentPos is the same
 			return n1.agentPos == n2.agentPos;
@@ -284,7 +288,7 @@ class Node {
 				break;
 		}
 		if(!world[newAgentPos.x, newAgentPos.y].passable || Character.TheresAGhostHere(newAgentPos) && Character.charState != Character.state.REVERSE)
-			return null;	// invalid action (hitting a wall)
+			return null;    // invalid action (hitting a wall)
 		Node n = new Node(newWorld, newAgentPos, dir);
 		n.cameFrom = this;
 		n.goal = goal;

@@ -41,10 +41,22 @@ public class Character : MonoBehaviour {
 	protected static Vector3 left = new Vector3(-1, 0, 0), right = new Vector3(1, 0, 0), up = new Vector3(0, 0, 1), down = new Vector3(0, 0, -1);
 	//protected static List<Vector2Int> ghostPositions = new List<Vector2Int>();
 	public static Dictionary<Character, Vector2Int> ghostPositions = new Dictionary<Character, Vector2Int>();
-	public static state charState = state.NORMAL;
+	private static state cs = state.NORMAL;
+	public static state charState {
+		get {
+			if(cs == state.REVERSE) {
+				return ghostPositions.Keys.Count > 0 ? cs : state.NORMAL;
+			}
+			return cs;
+		}
+		set {
+			cs = value;
+		}
+	}
 	protected static Vector3 origin = new Vector3(0, 0.7f, 0);
 	protected MeshRenderer rendy;
 	public static Character instance;
+	[HideInInspector] public bool ded = false;
 
 	public enum state {
 		NORMAL, REVERSE
@@ -73,10 +85,17 @@ public class Character : MonoBehaviour {
 		rb.isKinematic = true;
 		GetComponent<SphereCollider>().radius = 0.4f;
 		rendy = GetComponent<MeshRenderer>();
+
+		Vector3 normCoords = GetNormalizedCoords(rb.position);
+		tile = map.tileMap[Mathf.FloorToInt(normCoords.z), Mathf.FloorToInt(normCoords.x)];
+		nextTile = tile;
+		hAxis = "P" + playerNum + "Horizontal";
+		vAxis = "P" + playerNum + "Vertical";
+		if(!(this is Pacman)) ReachTile();
 	}
 
 	// Use this for initialization
-	protected virtual void Start () {
+	protected virtual void Start() {
 		Reset();
 		Vector3 normCoords = GetNormalizedCoords(rb.position);
 		tile = map.tileMap[Mathf.FloorToInt(normCoords.z), Mathf.FloorToInt(normCoords.x)];
@@ -89,21 +108,22 @@ public class Character : MonoBehaviour {
 		myPos.x = rb.position.x;
 		myPos.y = rb.position.z;
 		if(!(this is Pacman)) {
-			ghostPositions.Add(this, Vector2Int.zero);
-		}
-		if(instance == null && !(this is Pacman)) {
-			instance = this;
+			if(instance == null) {
+				instance = this;
+			}
+			//ghostPositions.Clear();
+			Debug.Log("KEEZE::: " + ghostPositions.Keys.Count);
+			if(!ghostPositions.ContainsKey(this)) {
+				ghostPositions.Add(this, Vector2Int.zero);  // this MUST come last because it exits the function as if
+															// it's a return statement (????????????????????????????)
+			}
 		}
 	}
-	
+
 	// Update is called once per frame
-	void Update () {
+	void Update() {
 		myPos.x = rb.position.x;
 		myPos.y = rb.position.z;
-		if(!(this is Pacman)) {
-			Vector3 normCoords = GetNormalizedCoords(rb.position);
-			ghostPositions[this] = new Vector2Int((int)normCoords.z, (int)normCoords.x);
-		}
 		if(!isAiOnly) {
 			if(Input.GetAxisRaw(hAxis) > 0) {
 				lasth = direction.RIGHT;
@@ -133,23 +153,25 @@ public class Character : MonoBehaviour {
 			Tile.amplitude = 0;
 			Character[] ghosts = new Character[4];
 			ghostPositions.Keys.CopyTo(ghosts, 0);
-			FindObjectOfType<Pacman>().speed = 26;
+			FindObjectOfType<Pacman>().speed = 24;
 			foreach(Character c in ghosts) {
 				//c.speed *= 2f;
 				//c.transform.position = c.tile.transform.position + origin;
 			}
 		} else {
-			SetMaterials(state.REVERSE);
-			charState = state.REVERSE;
-			Tile.amplitude = 2;
-			Character[] ghosts = new Character[4];
-			ghostPositions.Keys.CopyTo(ghosts, 0);
-			FindObjectOfType<Pacman>().speed = 28;
-			foreach(Character c in ghosts) {
-				//c.speed *= 0.5f;
-				//c.transform.position = c.tile.transform.position + origin;
+			if(charState != state.REVERSE) {
+				SetMaterials(state.REVERSE);
+				charState = state.REVERSE;
+				Tile.amplitude = 2;
+				Character[] ghosts = new Character[4];
+				ghostPositions.Keys.CopyTo(ghosts, 0);
+				FindObjectOfType<Pacman>().speed = 26;
+				foreach(Character c in ghosts) {
+					//c.speed *= 0.5f;
+					//c.transform.position = c.tile.transform.position + origin;
+				}
+				// start a coroutine that works as a timer for the reverse state
 			}
-			// start a coroutine that works as a timer for the reverse state
 			Character ob = FindObjectOfType<Character>();
 			ob.StopCoroutine("GoBackNormal");
 			ob.StartCoroutine("GoBackNormal");
@@ -192,8 +214,23 @@ public class Character : MonoBehaviour {
 		Move();
 	}
 
-	public void Relocate() {
+	public void Murder() {
 		//transform.position = origin);
+		// remove from dictionary
+		ghostPositions.Remove(this);
+
+		// instance must be a live ghost
+		if(instance == this) {
+			Character[] ghosts = new Character[ghostPositions.Keys.Count];
+			ghostPositions.Keys.CopyTo(ghosts, 0);
+			if(ghosts.Length != 0) {
+				instance = ghosts[0];
+			} else {
+				instance = null;
+			}
+		}
+
+		ded = true;
 		transform.position = origin;
 		Reset();
 	}
@@ -251,29 +288,29 @@ public class Character : MonoBehaviour {
 					transform.position = rb.position + right * map.tileSize / spd;
 				}
 			}
-		////////////////////////////////
+			////////////////////////////////
 			#endregion
-		////////////////////////////////
-			
+			////////////////////////////////
+
 		} else {
 			// This fixes a bug with looping around the map
 			if(tile.i == 0 && lastdPress == direction.DOWN || tile.i == MapGene.mapHeight - 1 && lastdPress == direction.UP ||
 					tile.j == 0 && lastdPress == direction.RIGHT || tile.j == MapGene.mapWidth - 1 && lastdPress == direction.LEFT) {
-				if(distFromTile >= map.tileSize) {	// if we just looped around and then pressed the opposite direction
+				if(distFromTile >= map.tileSize) {  // if we just looped around and then pressed the opposite direction
 					Tile temp = nextTile;
 					nextTile = tile;
 					tile = temp;
 					Debug.LogWarning("Attempting to fix bug #2");
-				} else {							// if we pressed the opposite direction right before looping around
-					SetNextTile();					// Ask Zac for an explanation if you're really curious exactly what this check is for. If you're lucky, he'll remember.
+				} else {                            // if we pressed the opposite direction right before looping around
+					SetNextTile();                  // Ask Zac for an explanation if you're really curious exactly what this check is for. If you're lucky, he'll remember.
 				}
 			}
 			// Move in the direction from this tile to nextTile
 			Vector3 movVec = (nextTile.transform.position - tile.transform.position) / spd;
 			transform.position = rb.position + movVec;
 			//if(this is Pacman) {
-				//Debug.Log("tile: " + tile + "nextTile: " + nextTile);
-				//Debug.Log("moving " + movVec);
+			//Debug.Log("tile: " + tile + "nextTile: " + nextTile);
+			//Debug.Log("moving " + movVec);
 			//}
 		}
 		if(Vector2.Distance(myPos, ntPos) <= map.tileSize / spd || Vector2.Distance(myPos, tPos) >= map.tileSize) {  // Reached a new tile
@@ -287,6 +324,10 @@ public class Character : MonoBehaviour {
 		//Debug.Log("Moving to: " + tile.gameObject.name);
 		transform.position = nextTile.transform.position;
 		SetNextTile();
+		if(!ded && !(this is Pacman)) {
+			Vector3 normCoords = GetNormalizedCoords(rb.position);
+			ghostPositions[this] = new Vector2Int((int)normCoords.z, (int)normCoords.x);
+		}
 	}
 
 	/**Get which direction we should go based on input and past input.
@@ -372,7 +413,7 @@ public class Character : MonoBehaviour {
 				//Debug.Log("lastv: " + lastv + ", lasth: " + lasth + ", lastdTravel: " + lastdTravel + ", lastdPress: " + lastdPress + "\nUp passable: " + tile.up.passable + ", Down passable: " + tile.down.passable);
 				nextTile = tile.right;
 				return direction.RIGHT;
-			} else { 
+			} else {
 				nextTile = tile.down;
 				return direction.DOWN;
 			}
