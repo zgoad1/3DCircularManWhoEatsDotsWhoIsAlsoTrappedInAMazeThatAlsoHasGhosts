@@ -1,8 +1,0 @@
-1
-Idea: Pacman could use A* once at the start of the game to get the ideal path for consuming all the dots. When a ghost is dangerously close, he'll pathfind around the ghost to the next ideal path tile, ignoring dots.Pathfinding ignoring dots will be significantly more efficient because it eliminates lots of array copying and other operations.
-
-Problem: The main A* can't keep track of changes that happen when Pacman is running from ghosts.If Pacman eats dots while he's running from ghosts, the main A* will still think they're there since it never updates.
-
-
-2
-Idea: Make 2 versions of every tile: one with its item, and one without (this is already done when we make the goal state). When a tile is succed, don't make a copy of it with a null item, but rather set the newWorld tile to the goal state's corresponding tile.

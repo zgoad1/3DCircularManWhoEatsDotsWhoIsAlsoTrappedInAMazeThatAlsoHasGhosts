@@ -4,15 +4,11 @@
 pamcan
 
 ## To do
-- Implement Pacman AI
-- Add actual Pacman model
+- Fix Pacman AI
 - Animate Pacman
-- Animate ghosts
-- Implement gameplay elements
 
 ## Bugs
 **- A -**
-- Clicking into the game window after clicking out will cause all the ghosts to lose track of their current tile and ride off into the sunset (but only sometimes???)
 
 **- B -**
 - Changing one ghost's direction will occasionally mess with another's

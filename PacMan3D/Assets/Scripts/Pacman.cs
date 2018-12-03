@@ -6,6 +6,7 @@ public class Pacman : Character {
 	protected direction where = (direction)(-5);
 	private Node start, goal;
 	private static direction[] actions = new direction[] { direction.DOWN, direction.LEFT, direction.RIGHT, direction.UP };
+	[SerializeField] private int maxAstarIterations = 100;
 
 
 	protected override void Start() {
@@ -23,7 +24,8 @@ public class Pacman : Character {
 		start = new Node(startWorld, coords, where);
 		goal = new Node(goalWorld, coords, where);
 		start.goal = goal;
-		ReachTile();
+		//ReachTile();
+		Astar(start);
 	}
 
 	private void OnTriggerEnter(Collider other) {
@@ -68,6 +70,7 @@ public class Pacman : Character {
 		tile.item = null;
 		Vector3 normCoords = GetNormalizedCoords(rb.position);
 		Vector2Int coords = new Vector2Int(Mathf.FloorToInt(normCoords.z), Mathf.FloorToInt(normCoords.x));
+		start.itemTiles.Remove(start.world[coords.x, coords.y]);
 		start.agentPos = coords;
 		start.world[coords.x, coords.y] = goal.world[coords.x, coords.y];
 		goal.agentPos = GetNearestGhostPos(coords);
@@ -81,7 +84,9 @@ public class Pacman : Character {
 		// this heuristic is perfectly accurate assuming all the
 		// "dirty tiles" can be "succed" contiguously
 		float dist = GetDistPenalty(agentPos);
-		return d * (w * 2 + 1) + w * (w + 1) + (dist * (dist + 1)) / 2;
+		//if(d == 0) w -= 1;
+		float value =  d * (w * 2 + 1) + w * (w + 1) + (dist * (dist + 1)) / 2;
+		return value;
 	}
 
 	// get the Vector2Int position of the nearest ghost.
@@ -103,7 +108,9 @@ public class Pacman : Character {
 	// get the penalty point cost for proximity to ghosts
 	public static float GetDistPenalty(Vector2Int agentPos) {
 		//if(charState == state.REVERSE) return 0;
-		float dist = Vector2Int.Distance(agentPos, GetNearestGhostPos(agentPos));
+		Vector2Int ghostPos = GetNearestGhostPos(agentPos);
+		if(ghostPos == Vector2Int.zero) return 0;
+		float dist = Vector2Int.Distance(agentPos, ghostPos);
 		return Mathf.Max(0, charState == state.NORMAL ? 8 - dist : dist);
 	}
 
@@ -138,7 +145,7 @@ public class Pacman : Character {
 			// stop us from looping forever in a very bad programmer way
 			iterations++;
 
-			if(current == goal || iterations >= 200) {
+			if(current == goal || iterations >= maxAstarIterations) {
 				Node next = GetNextNode(current);
 				where = next.actionPerformed;
 				//start = next;
@@ -146,6 +153,8 @@ public class Pacman : Character {
 				// (keeps GetNextNode from messing up)
 				Debug.Log("Astar chose " + next.actionPerformed);
 				Debug.Log("Nearest ghost: " + GetNearestGhostPos(current.agentPos));
+				Debug.Log("Iterations: " + iterations);
+				Debug.Log("Dots: " + next.itemTiles.Count);
 				return;
 			}
 			openSet.Remove(current);
@@ -173,7 +182,7 @@ public class Pacman : Character {
 				n.gscore = tempgscore;
 				n.fscore = n.gscore + Heuristic(n.DistToItem(), n.GetItemTiles().Count, n.agentPos);// + (OppositeDirection(n.actionPerformed, current.actionPerformed) ? 1 : 0);
 			}
-			//Debug.Log("caete");
+			Debug.Log("caete");
 		}
 	}
 }
@@ -215,7 +224,7 @@ class Node {
 	public Node cameFrom;
 	public Node goal;
 
-	List<TileData> itemTiles;
+	public List<TileData> itemTiles;
 
 
 	public Node(TileData[,] world, Vector2Int agentPos, Character.direction action) {
@@ -310,8 +319,9 @@ class Node {
 		} else {
 			//Debug.Log("cate");
 		}
+		// subtract 1 from number of item tiles for this calculation if we're on an item tile
 		int dirtyTiles = GetItemTiles().Count - (world[agentPos[0], agentPos[1]].item != Item.ItemType.NONE ? 1 : 0);
-		int turnAround = cameFrom == null ? 0 : (Character.OppositeDirection(dir, cameFrom.actionPerformed) ? 1 : 0) * 5;
+		//int turnAround = cameFrom == null ? 0 : (Character.OppositeDirection(dir, cameFrom.actionPerformed) ? 1 : 0) * 5;
 		return 1 + 2 * dirtyTiles + (int)Pacman.GetDistPenalty(agentPos);// + turnAround;
 	}
 
